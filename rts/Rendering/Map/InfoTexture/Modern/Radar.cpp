@@ -53,17 +53,17 @@ CRadarTexture::CRadarTexture()
 	const std::string fragmentCode = R"(
 		uniform sampler2D texLoS;
 		uniform sampler2D texRadar;
-		//uniform sampler2D texJammer;
+		uniform sampler2D texJammer;
 		varying vec2 texCoord;
 
 		void main() {
 			float los = texture2D(texLoS, texCoord).r;
 
 			vec2 fr = texture2D(texRadar,  texCoord).rg;
-			//vec2 fj = texture2D(texJammer, texCoord).rg;
+			vec2 fj = texture2D(texJammer, texCoord).rg;
 			float cr = (fr.r + fr.g) * 200000.0;
-			//float cj = (fj.r + fj.g) * 200000.0;
-			gl_FragColor = vec4(cr, 0.0f, 0.0f, 0.0f);
+			float cj = (fj.r + fj.g) * 200000.0;
+			gl_FragColor = vec4(cr, cj * los, 0.0f, 0.0f);
 		}
 	)";
 
@@ -77,7 +77,7 @@ CRadarTexture::CRadarTexture()
 	} else {
 		shader->Enable();
 		shader->SetUniform("texRadar",  0);
-		//shader->SetUniform("texJammer", 1);
+		shader->SetUniform("texJammer", 1);
 		shader->SetUniform("texLoS",    2);
 		shader->Disable();
 		shader->Validate();
@@ -190,9 +190,9 @@ void CRadarTexture::Update()
 	// has no native support for them and so the transformation would happen on the CPU, too.
 	glBindTexture(GL_TEXTURE_2D, uploadTexRadar);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texSize.x, texSize.y, GL_RG, GL_UNSIGNED_BYTE, infoTexPBO.GetPtr());
-	// glActiveTexture(GL_TEXTURE1);
-	// glBindTexture(GL_TEXTURE_2D, uploadTexJammer);
-	// glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texSize.x, texSize.y, GL_RG, GL_UNSIGNED_BYTE, infoTexPBO.GetPtr(arraySize));
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, uploadTexJammer);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texSize.x, texSize.y, GL_RG, GL_UNSIGNED_BYTE, infoTexPBO.GetPtr(arraySize));
 	infoTexPBO.Invalidate();
 	infoTexPBO.Unbind();
 
