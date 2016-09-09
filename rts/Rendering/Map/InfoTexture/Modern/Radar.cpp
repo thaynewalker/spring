@@ -20,7 +20,7 @@ CRadarTexture::CRadarTexture()
 , uploadTexJammer(0)
 {
 	texSize = losHandler->radar.size;
-	texChannels = 1;
+	texChannels = 2;
 
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -77,7 +77,7 @@ CRadarTexture::CRadarTexture()
 	} else {
 		shader->Enable();
 		shader->SetUniform("texRadar",  0);
-		//shader->SetUniform("texJammer", 0);
+		//shader->SetUniform("texJammer", 1);
 		shader->SetUniform("texLoS",    2);
 		shader->Disable();
 		shader->Validate();
@@ -173,25 +173,24 @@ void CRadarTexture::Update()
 		return;
 	}
 
-	//const int jammerAllyTeam = modInfo.separateJammers ? gu->myAllyTeam : 0;
+	const int jammerAllyTeam = modInfo.separateJammers ? gu->myAllyTeam : 0;
 
 	infoTexPBO.Bind();
 	const size_t arraySize = texSize.x * texSize.y * sizeof(unsigned short);
 	auto infoTexMem = reinterpret_cast<unsigned char*>(infoTexPBO.MapBuffer());
 	const unsigned short* myRadar  = &losHandler->radar.losMaps[gu->myAllyTeam].front();
-	// const unsigned short* myJammer = &losHandler->jammer.losMaps[jammerAllyTeam].front();
+	const unsigned short* myJammer = &losHandler->jammer.losMaps[jammerAllyTeam].front();
 	memcpy(infoTexMem,  myRadar, arraySize);
-	// infoTexMem += arraySize;
-	// memcpy(infoTexMem, myJammer, arraySize);
+	infoTexMem += arraySize;
+	memcpy(infoTexMem, myJammer, arraySize);
 	infoTexPBO.UnmapBuffer();
 
 	//Trick: Upload the ushort as 2 ubytes, and then check both for `!=0` in the shader.
 	// Faster than doing it on the CPU! And uploading it as shorts would be slow, cause the GPU
 	// has no native support for them and so the transformation would happen on the CPU, too.
-	// glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, uploadTexRadar);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texSize.x, texSize.y, GL_RG, GL_UNSIGNED_BYTE, infoTexPBO.GetPtr());
-	// glActiveTexture(GL_TEXTURE0);
+	// glActiveTexture(GL_TEXTURE1);
 	// glBindTexture(GL_TEXTURE_2D, uploadTexJammer);
 	// glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texSize.x, texSize.y, GL_RG, GL_UNSIGNED_BYTE, infoTexPBO.GetPtr(arraySize));
 	infoTexPBO.Invalidate();
