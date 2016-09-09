@@ -27,7 +27,7 @@ CAirLosTexture::CAirLosTexture()
 	glSpringTexStorage2D(GL_TEXTURE_2D, -1, GL_R8, texSize.x, texSize.y);
 
 	infoTexPBO.Bind();
-	infoTexPBO.New(texSize.x * texSize.y * texChannels * 2, GL_STREAM_DRAW);
+	infoTexPBO.New(texSize.x * texSize.y * texChannels * sizeof(short), GL_STREAM_DRAW);
 	infoTexPBO.Unbind();
 
 	if (FBO::IsSupported()) {
