@@ -15,8 +15,8 @@
 	#include "System/Sync/FPUCheck.h"
 #endif
 
+#include <functional>
 #include <memory>
-#include <boost/version.hpp>
 #include <boost/thread.hpp>
 #include <cinttypes>
 #if defined(__APPLE__) || defined(__FreeBSD__)
@@ -27,6 +27,10 @@
 		#include <sys/prctl.h>
 	#endif
 	#include <sched.h>
+#endif
+
+#ifndef WIN32
+	#include "Linux/ThreadSupport.h"
 #endif
 
 #ifndef UNIT_TEST
@@ -241,7 +245,7 @@ namespace Threading {
 
 	int GetLogicalCpuCores() {
 		// auto-detect number of system threads (including hyperthreading)
-		return boost::thread::hardware_concurrency();
+		return spring::thread::hardware_concurrency();
 	}
 
 
@@ -392,19 +396,19 @@ namespace Threading {
 	}
 
 
-	boost::thread CreateNewThread(boost::function<void()> taskFunc, std::shared_ptr<Threading::ThreadControls>* ppCtlsReturn)
+	spring::thread CreateNewThread(std::function<void()> taskFunc, std::shared_ptr<Threading::ThreadControls>* ppCtlsReturn)
 	{
 #ifndef WIN32
 		// only used as locking mechanism, not installed by thread
 		Threading::ThreadControls tempCtls;
 
-		boost::unique_lock<boost::mutex> lock(tempCtls.mutSuspend);
-		boost::thread localthread(boost::bind(Threading::ThreadStart, taskFunc, ppCtlsReturn, &tempCtls));
+		std::unique_lock<spring::mutex> lock(tempCtls.mutSuspend);
+		spring::thread localthread(std::bind(Threading::ThreadStart, taskFunc, ppCtlsReturn, &tempCtls));
 
 		// Wait so that we know the thread is running and fully initialized before returning.
 		tempCtls.condInitialized.wait(lock);
 #else
-		boost::thread localthread(taskFunc);
+		spring::thread localthread(taskFunc);
 #endif
 
 		return localthread;
@@ -413,7 +417,7 @@ namespace Threading {
 	void SetMainThread() {
 		if (!haveMainThreadID) {
 			haveMainThreadID = true;
-			// boostMainThreadID = boost::this_thread::get_id();
+			// springMainThreadID = spring::this_thread::get_id();
 			nativeMainThreadID = Threading::GetCurrentThreadId();
 		}
 
@@ -432,7 +436,7 @@ namespace Threading {
 	void SetGameLoadThread() {
 		if (!haveGameLoadThreadID) {
 			haveGameLoadThreadID = true;
-			// boostGameLoadThreadID = boost::this_thread::get_id();
+			// springGameLoadThreadID = spring::this_thread::get_id();
 			nativeGameLoadThreadID = Threading::GetCurrentThreadId();
 		}
 
@@ -451,7 +455,7 @@ namespace Threading {
 	void SetWatchDogThread() {
 		if (!haveWatchDogThreadID) {
 			haveWatchDogThreadID = true;
-			// boostWatchDogThreadID = boost::this_thread::get_id();
+			// springWatchDogThreadID = spring::this_thread::get_id();
 			nativeWatchDogThreadID = Threading::GetCurrentThreadId();
 		}
 	}

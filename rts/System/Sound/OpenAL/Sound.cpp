@@ -13,7 +13,7 @@
 #endif
 
 #include <cinttypes>
-#include <boost/thread/thread.hpp>
+#include <functional>
 
 #include "System/Sound/ISoundChannels.h"
 #include "System/Sound/SoundLog.h"
@@ -34,7 +34,7 @@
 #include "System/Util.h"
 #include "System/Platform/Threading.h"
 #include "System/Platform/Watchdog.h"
-#include "System/Threading/SpringMutex.h"
+#include "System/Threading/SpringThreading.h"
 
 #include "System/float3.h"
 
@@ -69,8 +69,8 @@ CSound::CSound()
 	sounds.push_back(NULL);
 
 	assert(maxSounds>0);
-	soundThread = new boost::thread();
-	*soundThread = Threading::CreateNewThread(boost::bind(&CSound::StartThread, this, maxSounds));
+	soundThread = new spring::thread();
+	*soundThread = Threading::CreateNewThread(std::bind(&CSound::StartThread, this, maxSounds));
 
 	configHandler->NotifyOnChange(this);
 }
@@ -153,22 +153,22 @@ CSoundSource* CSound::GetNextBestSource(bool lock)
 		return nullptr;
 
 	// find if we got a free source
-	for (CSoundSource& src: sources) {
-		if (!src.IsPlaying(false)){
-			return &src;
+	for (CSoundSource* src: sources) {
+		if (!src->IsPlaying(false)){
+			return src;
 		}
 	}
 
 	// check the next best free source
 	CSoundSource* bestSrc = nullptr;
 	int bestPriority = INT_MAX;
-	for (CSoundSource& src: sources) {
+	for (CSoundSource* src: sources) {
 		/*if (!src.IsPlaying(true)) {
 			return &src;
 		}
-		else*/ if (src.GetCurrentPriority() <= bestPriority) {
-			bestSrc = &src;
-			bestPriority = src.GetCurrentPriority();
+		else*/ if (src->GetCurrentPriority() <= bestPriority) {
+			bestSrc = src;
+			bestPriority = src->GetCurrentPriority();
 		}
 	}
 	return bestSrc;
@@ -375,13 +375,15 @@ void CSound::StartThread(int maxSounds)
 
 	while (!soundThreadQuit) {
 		constexpr int FREQ_IN_HZ = 30;
-		boost::this_thread::sleep(boost::posix_time::millisec(1000 / FREQ_IN_HZ));
+		spring::this_thread::sleep_for(std::chrono::milliseconds(1000 / FREQ_IN_HZ));
 		Watchdog::ClearTimer(WDT_AUDIO);
 		Update();
 	}
 
 	Watchdog::DeregisterThread(WDT_AUDIO);
 
+	for (CSoundSource* source: sources)
+		delete source;
 	sources.clear(); // delete all sources
 	delete efx; // must happen after sources and before context
 	efx = NULL;
@@ -395,8 +397,8 @@ void CSound::StartThread(int maxSounds)
 void CSound::Update()
 {
 	std::lock_guard<spring::recursive_mutex> lck(soundMutex); // lock
-	for (sourceVecT::iterator it = sources.begin(); it != sources.end(); ++it)
-		it->Update();
+	for (CSoundSource* source: sources)
+		source->Update();
 	CheckError("CSound::Update");
 	UpdateListenerReal();
 }
@@ -410,7 +412,7 @@ size_t CSound::MakeItemFromDef(const soundItemDef& itemDef)
 	if (it == itemDef.end())
 		return 0;
 
-	boost::shared_ptr<SoundBuffer> buffer = SoundBuffer::GetById(LoadSoundBuffer(it->second));
+	std::shared_ptr<SoundBuffer> buffer = SoundBuffer::GetById(LoadSoundBuffer(it->second));
 
 	if (!buffer)
 		return 0;
@@ -581,7 +583,7 @@ size_t CSound::LoadSoundBuffer(const std::string& path)
 		std::vector<std::uint8_t> buf(file.FileSize());
 		file.Read(&buf[0], file.FileSize());
 
-		boost::shared_ptr<SoundBuffer> buffer(new SoundBuffer());
+		std::shared_ptr<SoundBuffer> buffer(new SoundBuffer());
 		bool success = false;
 		const std::string ending = file.GetFileExt();
 		if (ending == "wav") {

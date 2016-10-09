@@ -9,9 +9,9 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <boost/ptr_container/ptr_vector.hpp>
 
 #include "System/float3.h"
+#include "System/Threading/SpringThreading.h"
 
 #include "SoundItem.h"
 
@@ -20,11 +20,6 @@ class SoundBuffer;
 class SoundItem;
 struct ALCdevice_struct;
 typedef struct ALCdevice_struct ALCdevice;
-
-namespace boost {
-	class thread;
-}
-
 
 /// Default sound system implementation (OpenAL)
 class CSound : public ISound
@@ -94,13 +89,13 @@ private:
 	float3 prevVelocity;
 	bool listenerNeedsUpdate;
 
-	typedef boost::ptr_vector<CSoundSource> sourceVecT;
+	typedef std::vector<CSoundSource*> sourceVecT;
 	sourceVecT sources;
 
 	soundItemDef defaultItem;
 	soundItemDefMap soundItemDefs;
 
-	boost::thread* soundThread;
+	spring::thread* soundThread;
 
 	volatile bool soundThreadQuit;
 	volatile bool canLoadDefs;
