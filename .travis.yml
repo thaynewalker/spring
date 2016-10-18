@@ -20,15 +20,16 @@ addons:
     - llvm-toolchain-precise-3.6
     packages:
     # install toolchains
-    - gcc-5
     - g++-5
+    - g++-4.9
     - clang-3.6
+    - clang-3.7
 language: cpp
 compiler:
-  - clang
   - gcc
+  - clang
 
-  env:
+env:
   global:
     - SPRING_DATADIR=~/build/spring/spring
      # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
