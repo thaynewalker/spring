@@ -13,5 +13,5 @@ sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
 # boost
 #sudo add-apt-repository --yes ppa:boost-latest/ppa
 
-#sudo apt-get update -qq
+sudo apt-get update -qq
 
