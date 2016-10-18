@@ -13,8 +13,35 @@ addons:
     notification_email: ashdnazg.springrts@gmail.com
     build_command:   make engine-headless
     branch_pattern: coverity_scan
+  apt:
+    sources:
+    # add PPAs with more up-to-date toolchains
+    - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise-3.6
+    packages:
+    # install toolchains
+    - gcc-5
+    - g++-5
+    - clang-3.6
 language: cpp
+compiler:
+  - clang
+  - gcc
+
+  env:
+  global:
+    - SPRING_DATADIR=~/build/spring/spring
+     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+     #   via the "travis encrypt" command using the project repo's public key
+     #   also note that forks don't get access to secure keys
+     #   you have to test using a branch in the main repo
+    - secure: "QSZUdSH72Y+X73FBy6cDdhlMH3ppMewbU/LquXe/sIUdJE0LmcCFHnPayI91TTRgS8r6YXKh3DIhE9XTs1OUxmV+RUL84z85byAtotb+ukHSzlSLSGGZfrqey+/vrCXbYykfaxhazlVDfk5vx63lRYiD5lp5KLL24+PIdK6Qd5E="
+  matrix:
+    - TARGET="AAI CppTestAI E323AI HughAI KAIK NullAI NullJavaAI NullOOJavaAI RAI demotool"
+    - TARGET="engine-headless tests check"
+
 matrix:
+  fast_finish: true
   include:
     - compiler: gcc
       addons:
@@ -50,19 +77,7 @@ matrix:
           packages:
             - clang-3.7
       env: COMPILER=clang++-3.7
-env:
-  global:
-    - SPRING_DATADIR=~/build/spring/spring
-     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-     #   via the "travis encrypt" command using the project repo's public key
-     #   also note that forks don't get access to secure keys
-     #   you have to test using a branch in the main repo
-    - secure: "QSZUdSH72Y+X73FBy6cDdhlMH3ppMewbU/LquXe/sIUdJE0LmcCFHnPayI91TTRgS8r6YXKh3DIhE9XTs1OUxmV+RUL84z85byAtotb+ukHSzlSLSGGZfrqey+/vrCXbYykfaxhazlVDfk5vx63lRYiD5lp5KLL24+PIdK6Qd5E="
-  matrix:
-    - TARGET="AAI CppTestAI E323AI HughAI KAIK NullAI NullJavaAI NullOOJavaAI RAI demotool"
-    - TARGET="engine-headless tests check"
-matrix:
-  fast_finish: true
+
 
 before_install:
   - test "${TRAVIS_BRANCH}" != "coverity_scan" -o "${TRAVIS_JOB_NUMBER##*.}" = "1" || exit 0
