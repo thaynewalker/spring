@@ -4,9 +4,9 @@
 
 set -e
 
-#sudo apt-get install gcc-4.8 g++-4.8;
-#sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90;
-#sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90;
+sudo apt-get install gcc-4.9 g++-4.9;
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90;
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90;
 
 sudo apt-get install -y libglew-dev libsdl2-dev libdevil-dev libopenal-dev libogg-dev \
   libvorbis-dev libfreetype6-dev p7zip-full libxcursor-dev libunwind8-dev
