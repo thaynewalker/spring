@@ -10,6 +10,8 @@
 #include "OOAICallback.h"
 #include "Unit.h"
 #include "UnitDef.h"
+#include "Utils.h"
+#include "WeaponDef.h"
 #include "Game.h"
 
 #include <string>
@@ -75,7 +77,10 @@ int cpptestai::CCppTestAI::HandleEvent(int topic, const void* data) {
 			break;
 		}
 		case EVENT_WEAPON_FIRED: {
-			std::cout << "IR event" << "\n";
+			struct SWeaponFiredEvent* evt((struct SWeaponFiredEvent*) data);
+			springai::WeaponDef* wpn(callback->GetWeaponDefs()[evt->weaponDefId]);
+			float intensity(wpn->GetIntensity());
+			std::cout << "IR event intensity: " << intensity << "\n";
 			break;
 		}
 		case EVENT_ENEMY_LEAVE_LOS:{
@@ -91,6 +96,32 @@ int cpptestai::CCppTestAI::HandleEvent(int topic, const void* data) {
 			break;
 		}
 		case EVENT_ENEMY_ENTER_RADAR:{
+			struct SEnemyEnterRadarEvent* evt((struct SEnemyEnterRadarEvent*) data);
+			std::cout << "Saw enemy " << evt->enemy << " of " << callback->GetEnemyUnits().size() << "\n";
+			springai::Unit* enemy(callback->GetEnemyUnits()[evt->enemy]);
+			std::vector<springai::Unit*> const& friendlyUnits(callback->GetFriendlyUnits());
+
+			springai::Unit* closest(nullptr);
+			float dist(99999999);
+
+			std::vector<springai::Unit*> radarVisible;
+
+			for(auto const f: friendlyUnits){
+				float d(f->GetPos().distance(enemy->GetPos()));
+				if(fless(dist,f->GetDef()->GetRadarRadius())){
+					std::cout << "In radar range of unit " << f->GetUnitId() << "\n";
+					radarVisible.push_back(f);
+					if(f->IsRadarOn()){
+						dist=d;
+						closest=f;
+					}
+				}
+			}
+
+			if(closest){
+
+			}
+
 			// EW - Simulate a comms event from the unit to other units
 			// SAM - Turn on radar
 			break;
