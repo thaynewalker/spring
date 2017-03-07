@@ -1,6 +1,6 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
-#include "CppTestAI.h"
+#include "Incumbent.h"
 
 
 #include "ExternalAI/Interface/AISEvents.h"
@@ -18,12 +18,12 @@
 #include <iostream>
 #include <ostream>
 
-cpptestai::CCppTestAI::CCppTestAI(springai::OOAICallback* callback):
+incumbent::Incumbent::Incumbent(springai::OOAICallback* callback):
 		callback(callback),
 		skirmishAIId(callback != NULL ? callback->GetSkirmishAIId() : -1)
 		{}
 
-cpptestai::CCppTestAI::~CCppTestAI() {}
+incumbent::Incumbent::~Incumbent() {}
 
 static inline std::string IntToString(int i, const std::string& format = "%i")
 {
@@ -46,12 +46,13 @@ static std::ostream& operator <<(std::ostream& ss, springai::Unit *const unit){
 			<< "JAM RADIUS: "<<unitDef->GetJammerRadius()<<"\n  "
 			<< "LOS HEIGHT: "<<unitDef->GetLosHeight()<<"\n  "
 			<< "LOS RADIUS: "<<unitDef->GetLosRadius()<<"\n  "
+			<< "RADAR ON: "<<unit->IsRadarOn()<<"\n  "
 			<< "RADAR RADIUS: "<<unitDef->GetRadarRadius()<<"\n  "
 			<< "LOC: "<<unit->GetPos()<<"\n  "
 			<< "VEL: "<<unit->GetVel();
 	return ss;
 }
-int cpptestai::CCppTestAI::HandleEvent(int topic, const void* data) {
+int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 
 	switch (topic) {
 		case EVENT_UNIT_CREATED: {
@@ -97,16 +98,17 @@ int cpptestai::CCppTestAI::HandleEvent(int topic, const void* data) {
 		}
 		case EVENT_ENEMY_ENTER_RADAR:{
 			struct SEnemyEnterRadarEvent* evt((struct SEnemyEnterRadarEvent*) data);
-			std::cout << "Saw enemy " << evt->enemy << " of " << callback->GetEnemyUnits().size() << "\n";
 			springai::Unit* enemy(nullptr);
 			for(auto const e:callback->GetEnemyUnits()){
 				if(e->GetUnitId()==evt->enemy){
+					std::cout << "Enemy entered radar: "<< e << std::endl;
 					enemy=e;
 					break;
 				}
 			}
 			if(!enemy){
-				std::cout << "Could not find enemy by ID: "<<evt->enemy << std::endl;
+				//std::cout << "Could not find enemy by ID: "<<evt->enemy << std::endl;
+				return 0;
 			}
 
 			std::vector<springai::Unit*> const& friendlyUnits(callback->GetFriendlyUnits());
@@ -118,7 +120,8 @@ int cpptestai::CCppTestAI::HandleEvent(int topic, const void* data) {
 
 			for(auto const f: friendlyUnits){
 				float d(f->GetPos().distance(enemy->GetPos()));
-				if(fless(dist,f->GetDef()->GetRadarRadius())){
+				std::cout << "Enemy distance from " << f << " = " << d << std::endl;
+				if(fless(d,f->GetDef()->GetRadarRadius())){
 					std::cout << "In radar range of unit " << f->GetUnitId() << "\n";
 					radarVisible.push_back(f);
 					if(f->IsRadarOn()){
@@ -133,10 +136,15 @@ int cpptestai::CCppTestAI::HandleEvent(int topic, const void* data) {
 				if(std::string(closest->GetDef()->GetType()).find("SAM")){
 					// SAM - Turn on radar
 					std::cout << "EVENT: SAM - Turning on Radar\n";
-					closest->Attack()
+					closest->RadarOn(3,0,100); // Delay 3 seconds, no options, stay in queue for 100
 				}
 				if(std::string(closest->GetDef()->GetType()).find("EW")){
 					// EW - Simulate a comms event from the unit to other units
+
+					std::cout << "EVENT: EW/ASV - Notifying neighbors - COMMS EVENT\n";
+					for(auto const r: radarVisible){
+						r->RadarOn(3,0,100);
+					}
 				}
 
 			}

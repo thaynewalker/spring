@@ -134,6 +134,14 @@ public:
 
 	float losRadius;
 	float airLosRadius;
+
+	float rcs; // My radar cross section (my visibility to radars)
+	float radarObservability; // My radar's observability
+	bool infraredSensor; // Whether my unit is capable of sensing IR
+	bool radarSensor; // Whether my unit is capable of sensing radar
+	float radarSensitivity; // How sensitive is my radar sensor
+	float infraredSensitivity; // How sensitive is my radar sensor
+
 	int radarRadius;
 	int sonarRadius;
 	int jammerRadius;

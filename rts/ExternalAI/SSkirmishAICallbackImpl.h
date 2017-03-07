@@ -299,6 +299,18 @@ EXPORT(float            ) skirmishAiCallback_UnitDef_getAirLosRadius(int skirmis
 
 EXPORT(float            ) skirmishAiCallback_UnitDef_getLosHeight(int skirmishAIId, int unitDefId);
 
+EXPORT(bool             ) skirmishAiCallback_UnitDef_hasInfraredSensor(int skirmishAIId, int unitDefId);
+
+EXPORT(bool             ) skirmishAiCallback_UnitDef_hasRadarSensor(int skirmishAIId, int unitDefId);
+
+EXPORT(float            ) skirmishAiCallback_UnitDef_getInfraredSensitivity(int skirmishAIId, int unitDefId);
+
+EXPORT(float            ) skirmishAiCallback_UnitDef_getRadarSensitivity(int skirmishAIId, int unitDefId);
+
+EXPORT(float            ) skirmishAiCallback_UnitDef_getRCS(int skirmishAIId, int unitDefId);
+
+EXPORT(float            ) skirmishAiCallback_UnitDef_getRadarObservability(int skirmishAIId, int unitDefId);
+
 EXPORT(int              ) skirmishAiCallback_UnitDef_getRadarRadius(int skirmishAIId, int unitDefId);
 
 EXPORT(int              ) skirmishAiCallback_UnitDef_getSonarRadius(int skirmishAIId, int unitDefId);
@@ -747,6 +759,8 @@ EXPORT(bool             ) skirmishAiCallback_Unit_SupportedCommand_isDisabled(in
 EXPORT(int              ) skirmishAiCallback_Unit_SupportedCommand_getParams(int skirmishAIId, int unitId, int supportedCommandId, const char** params, int params_sizeMax);
 
 EXPORT(float            ) skirmishAiCallback_Unit_getHealth(int skirmishAIId, int unitId);
+
+EXPORT(bool            ) skirmishAiCallback_Unit_isRadarOn(int skirmishAIId, int unitId);
 
 EXPORT(float            ) skirmishAiCallback_Unit_getSpeed(int skirmishAIId, int unitId);
 

@@ -39,15 +39,17 @@ namespace icon {
 #define LOS_INRADAR    (1 << 1)  // the unit is currently in radar from the allyteam
 #define LOS_PREVLOS    (1 << 2)  // the unit has previously been in los from the allyteam
 #define LOS_CONTRADAR  (1 << 3)  // the unit has continuously been in radar since it was last inlos by the allyteam
+#define LOS_INSENSOR   (1 << 4)  // the unit is currently being detected by radar sensors of the allyteam
 
 // LOS mask bits  (masked bits are not automatically updated)
 #define LOS_INLOS_MASK     (1 << 8)   // do not update LOS_INLOS
 #define LOS_INRADAR_MASK   (1 << 9)   // do not update LOS_INRADAR
 #define LOS_PREVLOS_MASK   (1 << 10)  // do not update LOS_PREVLOS
 #define LOS_CONTRADAR_MASK (1 << 11)  // do not update LOS_CONTRADAR
+#define LOS_INSENSOR_MASK  (1 << 12)  // do not update LOS_INSENSOR
 
 #define LOS_ALL_MASK_BITS \
-	(LOS_INLOS_MASK | LOS_INRADAR_MASK | LOS_PREVLOS_MASK | LOS_CONTRADAR_MASK)
+	(LOS_INLOS_MASK | LOS_INRADAR_MASK | LOS_PREVLOS_MASK | LOS_CONTRADAR_MASK | LOS_INSENSOR_MASK)
 
 enum ScriptCloakBits { // FIXME -- not implemented
 	// always set to 0 if not enabled
@@ -60,9 +62,6 @@ enum ScriptCloakBits { // FIXME -- not implemented
 	SCRIPT_CLOAK_IGNORE_CAPTURING = (1 << 6),
 	SCRIPT_CLOAK_IGNORE_TERRAFORM = (1 << 7)
 };
-
-
-
 
 
 class CUnit : public CSolidObject
@@ -393,9 +392,7 @@ public:
 	int airLosRadius;
 
 	bool radarOn;
-	float rcs; // My radar cross section (my visibility to radars)
-	float radarObservability; // My radar's observability
-	bool infraredCapable; // Whether my unit is capable of sensing IR
+
 	int radarRadius;
 	int sonarRadius;
 	int jammerRadius;

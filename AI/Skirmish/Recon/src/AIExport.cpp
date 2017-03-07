@@ -7,12 +7,12 @@
 #include "OOAICallback.h"
 #include "WrappOOAICallback.h"
 
-#include "CppTestAI.h"
+#include "Recon.h"
 
 #include <stdexcept>
 #include <map>
 
-static std::map<int, cpptestai::CCppTestAI*> myAIs;
+static std::map<int, recon::Recon*> myAIs;
 static std::map<int, springai::OOAICallback*>  myAICallbacks;
 
 const static int ERROR_SHIFT = 100;
@@ -36,7 +36,7 @@ EXPORT(int) init(int skirmishAIId, const struct SSkirmishAICallback* innerCallba
 
 	try {
 		springai::OOAICallback* clb = springai::WrappOOAICallback::GetInstance(innerCallback, skirmishAIId);
-		cpptestai::CCppTestAI* ai = new cpptestai::CCppTestAI(clb);
+		recon::Recon* ai = new recon::Recon(clb);
 
 		myAIs[skirmishAIId] = ai;
 		myAICallbacks[skirmishAIId] = clb;
@@ -55,7 +55,7 @@ EXPORT(int) release(int skirmishAIId) {
 		springai::OOAICallback* clb = myAICallbacks[skirmishAIId];
 		myAICallbacks.erase(skirmishAIId);
 
-		cpptestai::CCppTestAI* ai = myAIs[skirmishAIId];
+		recon::Recon* ai = myAIs[skirmishAIId];
 		myAIs.erase(skirmishAIId);
 
 		delete ai;

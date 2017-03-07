@@ -773,11 +773,6 @@ bool CLosHandler::InLos(const CUnit* unit, int allyTeam) const
 			return false;
 		}
 	}
-	CUnit const* closest;
-	this->Get
-
-	// Special rule for units operating radar
-	if(unit->radarOn && unit->radarRadius*unit->radarRadius*unit->radarObservability < closest->)
 
 	return (InLos(unit->pos, allyTeam) || InLos(unit->pos + unit->speed, allyTeam));
 }
@@ -876,4 +871,31 @@ bool CLosHandler::InJammer(const CUnit* unit, int allyTeam) const
 		return sonarJammer.InSight(unit->pos, jammerAlly);
 	}
 	return jammer.InSight(unit->pos, jammerAlly);
+}
+
+bool CLosHandler::InSensor(const float3 pos, int allyTeam) const
+{
+	return (sensor.InSight(pos, allyTeam));
+}
+
+bool CLosHandler::InSensor(const CUnit* unit, int allyTeam) const
+{
+	if(!unit->radarOn){return false;}
+	float radarProp(unit->radarRadius*unit->unitDef->radarObservability*2.0);
+	const CTeam * team(teamHandler->Team(allyTeam));
+	CUnit const* closest;
+	float best(9999999);
+	for(auto const u: team->units){
+		if(u->unitDef->radarSensor){
+			float dist(unit->pos.distance(u->pos)*(1.0f-unit->unitDef->radarSensitivity+0.001));
+
+			if(dist<best){
+				best=dist;
+				closest=u;
+			}
+		}
+	}
+	// Special rule for units operating radar
+	return (radarProp > best);
+
 }

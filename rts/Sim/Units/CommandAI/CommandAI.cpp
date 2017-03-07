@@ -495,7 +495,7 @@ void CCommandAI::AddCommandDependency(const Command& c) {
 
 bool CCommandAI::HasRadar() const
 {
-	return (owner->unitDef->GetRadarRadius());
+	return (owner->radarRadius);
 }
 
 bool CCommandAI::IsAttackCapable() const

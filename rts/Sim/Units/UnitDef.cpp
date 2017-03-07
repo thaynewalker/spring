@@ -98,6 +98,12 @@ UnitDef::UnitDef()
 	, radarHeight(0.0f)
 	, losRadius(0.0f)
 	, airLosRadius(0.0f)
+	, rcs(0.0)
+	, radarObservability(0.0f)
+	, infraredSensor(false)
+	, radarSensor(false)
+	, radarSensitivity(0.0f)
+	, infraredSensitivity(0.0f)
 	, radarRadius(0.0f)
 	, sonarRadius(0.0f)
 	, jammerRadius(0.0f)
@@ -386,6 +392,14 @@ UnitDef::UnitDef(const LuaTable& udTable, const std::string& unitName, int id)
 
 	losHeight = udTable.GetFloat("losEmitHeight", 20.0f);
 	radarHeight = udTable.GetFloat("radarEmitHeight", losHeight);
+
+
+	rcs = udTable.GetFloat("rcs", 1.0);
+	radarObservability = udTable.GetFloat("radarObservability",1.0);
+	infraredSensor = udTable.GetBool("infraredSensor",false);
+	radarSensor = udTable.GetBool("radarSensor",false);
+	radarSensitivity = udTable.GetBool("radarSensitivity",0.5f);
+	infraredSensitivity = udTable.GetBool("infraredSensitivity",0.5f);
 
 	losRadius = udTable.GetFloat("sightDistance", 0.0f);
 	airLosRadius = udTable.GetFloat("airSightDistance", 1.5f * losRadius);

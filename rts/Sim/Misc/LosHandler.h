@@ -250,6 +250,9 @@ public:
 		return seismic.InSight(unit->pos, allyTeam);
 	}
 
+	bool InSensor(const float3 pos, int allyTeam) const;
+	bool InSensor(const CUnit* unit, int allyTeam) const;
+
 public:
 	// default operations for targeting-facilities
 	void IncreaseAllyTeamRadarErrorSize(int allyTeam) { radarErrorSizes[allyTeam] *= baseRadarErrorMult; }

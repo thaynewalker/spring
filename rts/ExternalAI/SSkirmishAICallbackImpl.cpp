@@ -2763,6 +2763,30 @@ EXPORT(float) skirmishAiCallback_UnitDef_getLosHeight(int skirmishAIId, int unit
 	return getUnitDefById(skirmishAIId, unitDefId)->losHeight;
 }
 
+EXPORT(bool) skirmishAiCallback_UnitDef_hasInfraredSensor(int skirmishAIId, int unitDefId){
+	return getUnitDefById(skirmishAIId, unitDefId)->infraredSensor;
+}
+
+EXPORT(bool) skirmishAiCallback_UnitDef_hasRadarSensor(int skirmishAIId, int unitDefId){
+	return getUnitDefById(skirmishAIId, unitDefId)->radarSensor;
+}
+
+EXPORT(float) skirmishAiCallback_UnitDef_getInfraredSensitivity(int skirmishAIId, int unitDefId){
+	return getUnitDefById(skirmishAIId, unitDefId)->infraredSensitivity;
+}
+
+EXPORT(float) skirmishAiCallback_UnitDef_getRadarSensitivity(int skirmishAIId, int unitDefId){
+	return getUnitDefById(skirmishAIId, unitDefId)->radarSensitivity;
+}
+
+EXPORT(float) skirmishAiCallback_UnitDef_getRCS(int skirmishAIId, int unitDefId){
+	return getUnitDefById(skirmishAIId, unitDefId)->rcs;
+}
+
+EXPORT(float) skirmishAiCallback_UnitDef_getRadarObservability(int skirmishAIId, int unitDefId){
+	return getUnitDefById(skirmishAIId, unitDefId)->radarObservability;
+}
+
 EXPORT(int) skirmishAiCallback_UnitDef_getRadarRadius(int skirmishAIId, int unitDefId) {
 	return getUnitDefById(skirmishAIId, unitDefId)->radarRadius;
 }
@@ -3884,6 +3908,10 @@ EXPORT(float) skirmishAiCallback_Unit_getHealth(int skirmishAIId, int unitId) {
 		return skirmishAIId_cheatCallback[skirmishAIId]->GetUnitHealth(unitId);
 
 	return skirmishAIId_callback[skirmishAIId]->GetUnitHealth(unitId);
+}
+
+EXPORT(bool) skirmishAiCallback_Unit_isRadarOn(int skirmishAIId, int unitId){
+	return skirmishAIId_callback[skirmishAIId]->IsUnitRadarOn(unitId);
 }
 
 EXPORT(float) skirmishAiCallback_Unit_getSpeed(int skirmishAIId, int unitId) {
@@ -5359,6 +5387,12 @@ static void skirmishAiCallback_init(SSkirmishAICallback* callback) {
 	callback->UnitDef_getLosRadius = &skirmishAiCallback_UnitDef_getLosRadius;
 	callback->UnitDef_getAirLosRadius = &skirmishAiCallback_UnitDef_getAirLosRadius;
 	callback->UnitDef_getLosHeight = &skirmishAiCallback_UnitDef_getLosHeight;
+	callback->UnitDef_hasInfraredSensor = &skirmishAiCallback_UnitDef_hasInfraredSensor;
+	callback->UnitDef_hasRadarSensor = &skirmishAiCallback_UnitDef_hasRadarSensor;
+	callback->UnitDef_getInfraredSensitivity = &skirmishAiCallback_UnitDef_getInfraredSensitivity;
+	callback->UnitDef_getRadarSensitivity = &skirmishAiCallback_UnitDef_getRadarSensitivity;
+	callback->UnitDef_getRCS = &skirmishAiCallback_UnitDef_getRCS;
+	callback->UnitDef_getRadarObservability = &skirmishAiCallback_UnitDef_getRadarObservability;
 	callback->UnitDef_getRadarRadius = &skirmishAiCallback_UnitDef_getRadarRadius;
 	callback->UnitDef_getSonarRadius = &skirmishAiCallback_UnitDef_getSonarRadius;
 	callback->UnitDef_getJammerRadius = &skirmishAiCallback_UnitDef_getJammerRadius;
@@ -5582,6 +5616,7 @@ static void skirmishAiCallback_init(SSkirmishAICallback* callback) {
 	callback->Unit_SupportedCommand_isDisabled = &skirmishAiCallback_Unit_SupportedCommand_isDisabled;
 	callback->Unit_SupportedCommand_getParams = &skirmishAiCallback_Unit_SupportedCommand_getParams;
 	callback->Unit_getHealth = &skirmishAiCallback_Unit_getHealth;
+	callback->Unit_isRadarOn = &skirmishAiCallback_Unit_isRadarOn;
 	callback->Unit_getSpeed = &skirmishAiCallback_Unit_getSpeed;
 	callback->Unit_getPower = &skirmishAiCallback_Unit_getPower;
 	callback->Unit_getResourceUse = &skirmishAiCallback_Unit_getResourceUse;

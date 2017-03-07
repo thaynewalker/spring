@@ -141,6 +141,7 @@ CUnit::CUnit()
 , realAirLosRadius(0)
 , losRadius(0)
 , airLosRadius(0)
+, radarOn(false)
 , radarRadius(0)
 , sonarRadius(0)
 , jammerRadius(0)
@@ -329,7 +330,7 @@ void CUnit::PreInit(const UnitLoadParams& params)
 	unitHandler->AddUnit(this);
 	quadField->MovedUnit(this);
 
-	losStatus[allyteam] = LOS_ALL_MASK_BITS | LOS_INLOS | LOS_INRADAR | LOS_PREVLOS | LOS_CONTRADAR;
+	losStatus[allyteam] = LOS_ALL_MASK_BITS | LOS_INLOS | LOS_INRADAR | LOS_PREVLOS | LOS_CONTRADAR | LOS_INSENSOR;
 
 #ifdef TRACE_SYNC
 	tracefile << "[" << __FUNCTION__ << "] id: " << id << ", name: " << unitDef->name << " ";
@@ -357,6 +358,7 @@ void CUnit::PreInit(const UnitLoadParams& params)
 
 	tooltip = unitDef->humanName + " - " + unitDef->tooltip;
 
+	radarOn = true;
 
 	// sensor parameters
 	realLosRadius    = Clamp(int(unitDef->losRadius)    , 0, MAX_UNIT_SENSOR_RADIUS);
@@ -948,14 +950,20 @@ unsigned short CUnit::CalcLosStatus(int at)
 
 	if (losHandler->InLos(this, at)) {
 		newStatus |= (mask & (LOS_INLOS   | LOS_INRADAR |
-		                      LOS_PREVLOS | LOS_CONTRADAR));
+		                      LOS_PREVLOS | LOS_CONTRADAR | LOS_INSENSOR));
 	}
 	else if (losHandler->InRadar(this, at)) {
 		newStatus |=  (mask & LOS_INRADAR);
 		newStatus &= ~(mask & LOS_INLOS);
+		newStatus &= ~(mask & LOS_INSENSOR);
+	}
+	else if (losHandler->InSensor(this, at)) {
+		newStatus |=  (mask & LOS_INSENSOR);
+		newStatus &= ~(mask & LOS_INRADAR);
+		newStatus &= ~(mask & LOS_INLOS);
 	}
 	else {
-		newStatus &= ~(mask & (LOS_INLOS | LOS_INRADAR | LOS_CONTRADAR));
+		newStatus &= ~(mask & (LOS_INLOS | LOS_INRADAR | LOS_CONTRADAR | LOS_INSENSOR));
 	}
 
 	return newStatus;
@@ -1550,7 +1558,7 @@ bool CUnit::ChangeTeam(int newteam, ChangeType type)
 
 	for (int at = 0; at < teamHandler->ActiveAllyTeams(); ++at) {
 		if (teamHandler->Ally(at, allyteam)) {
-			SetLosStatus(at, LOS_ALL_MASK_BITS | LOS_INLOS | LOS_INRADAR | LOS_PREVLOS | LOS_CONTRADAR);
+			SetLosStatus(at, LOS_ALL_MASK_BITS | LOS_INLOS | LOS_INRADAR | LOS_PREVLOS | LOS_CONTRADAR | LOS_INSENSOR);
 		} else {
 			// re-calc LOS status
 			losStatus[at] = 0;
@@ -2831,6 +2839,7 @@ CR_REG_METADATA(CUnit, (
 	CR_MEMBER(losRadius),
 	CR_MEMBER(airLosRadius),
 
+	CR_MEMBER(radarOn),
 	CR_MEMBER(radarRadius),
 	CR_MEMBER(sonarRadius),
 	CR_MEMBER(jammerRadius),

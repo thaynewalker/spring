@@ -632,6 +632,18 @@ struct SSkirmishAICallback {
 
 	int               (CALLING_CONV *UnitDef_getJammerRadius)(int skirmishAIId, int unitDefId);
 
+	bool              (CALLING_CONV *UnitDef_hasInfraredSensor)(int skirmishAIId, int unitDefId);
+
+	bool              (CALLING_CONV *UnitDef_hasRadarSensor)(int skirmishAIId, int unitDefId);
+
+	float             (CALLING_CONV *UnitDef_getInfraredSensitivity)(int skirmishAIId, int unitDefId);
+
+	float             (CALLING_CONV *UnitDef_getRadarSensitivity)(int skirmishAIId, int unitDefId);
+
+	float             (CALLING_CONV *UnitDef_getRCS)(int skirmishAIId, int unitDefId);
+
+	float             (CALLING_CONV *UnitDef_getRadarObservability)(int skirmishAIId, int unitDefId);
+
 	int               (CALLING_CONV *UnitDef_getSonarJamRadius)(int skirmishAIId, int unitDefId);
 
 	int               (CALLING_CONV *UnitDef_getSeismicRadius)(int skirmishAIId, int unitDefId);
@@ -1303,6 +1315,8 @@ struct SSkirmishAICallback {
 	float             (CALLING_CONV *Unit_getHealth)(int skirmishAIId, int unitId);
 
 	float             (CALLING_CONV *Unit_getSpeed)(int skirmishAIId, int unitId);
+
+	bool              (CALLING_CONV *Unit_isRadarOn)(int skirmishAIId, int unitId);
 
 	/**
 	 * Indicate the relative power of the unit,
