@@ -140,6 +140,8 @@ enum CommandTopic {
 	COMMAND_DEBUG_DRAWER_OVERLAYTEXTURE_SET_LABEL = 94,
 	COMMAND_TRACE_RAY_FEATURE                     = 95,
 	COMMAND_CALL_LUA_UI                           = 96,
+	COMMAND_UNIT_RADAR_ON                         = 97,
+	COMMAND_UNIT_RADAR_OFF                        = 98,
 };
 const int NUM_CMD_TOPICS = 97;
 
@@ -798,6 +800,44 @@ struct SFightUnitCommand {
 
 	float* toPos_posF3;
 }; //$ COMMAND_UNIT_FIGHT Unit_fight
+
+struct SRadarOnCommand {
+	int unitId;
+	int groupId;
+	/// see enum UnitCommandOptions
+	short options;
+	/**
+	 * At which frame the command will time-out and consequently be removed,
+	 * if execution of it has not yet begun.
+	 * Can only be set locally, is not sent over the network, and is used
+	 * for temporary orders.
+	 * default: MAX_INT (-> do not time-out)
+	 * example: currentFrame + 15
+	 */
+	int timeOut;
+
+	// Number of frames before the command is issued
+	int delay;
+}; //$ COMMAND_UNIT_RADAR_ON Unit_radarOn
+
+struct SRadarOffCommand {
+	int unitId;
+	int groupId;
+	/// see enum UnitCommandOptions
+	short options;
+	/**
+	 * At which frame the command will time-out and consequently be removed,
+	 * if execution of it has not yet begun.
+	 * Can only be set locally, is not sent over the network, and is used
+	 * for temporary orders.
+	 * default: MAX_INT (-> do not time-out)
+	 * example: currentFrame + 15
+	 */
+	int timeOut;
+
+	// Number of frames before the command is issued
+	int delay;
+}; //$ COMMAND_UNIT_RADAR_OFF Unit_radarOff
 
 struct SAttackUnitCommand {
 	int unitId;

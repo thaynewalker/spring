@@ -97,6 +97,7 @@ float ILosType::GetRadius(const CUnit* unit) const
 		case LOS_TYPE_RADAR:        return (unit->radarRadius    / SQUARE_SIZE) >> mipLevel;
 		case LOS_TYPE_SONAR:        return (unit->sonarRadius    / SQUARE_SIZE) >> mipLevel;
 		case LOS_TYPE_JAMMER:       return (unit->jammerRadius   / SQUARE_SIZE) >> mipLevel;
+		case LOS_TYPE_SENSOR:       return 999999; // Sensor radius is determined by the emitter, not the receiver
 		case LOS_TYPE_SEISMIC:      return (unit->seismicRadius  / SQUARE_SIZE) >> mipLevel;
 		case LOS_TYPE_SONAR_JAMMER: return (unit->sonarJamRadius / SQUARE_SIZE) >> mipLevel;
 		case LOS_TYPE_COUNT:        break; //make the compiler happy
@@ -134,7 +135,9 @@ inline void ILosType::UpdateUnit(CUnit* unit, bool ignore)
 	//   this creates an exploit via Unit::Activate if a unit is a !firebase
 	//   transported radar/jammer (it would leave a detached sensor coverage
 	//   zone behind at its old position)
-	const bool sightOnly = (type == LOS_TYPE_LOS) || (type == LOS_TYPE_AIRLOS);
+
+	//   is radar turned off on purpose?
+	const bool sightOnly = (type == LOS_TYPE_LOS) || (type == LOS_TYPE_AIRLOS) || (!unit->radarOn);
 	const bool noSensors = (!unit->activated || unit->IsStunned());
 	if (!sightOnly && noSensors) {
 		// block any type of radar/jammer coverage when deactivated
@@ -618,6 +621,7 @@ CLosHandler::CLosHandler()
 	, radar(modInfo.radarMipLevel, ILosType::LOS_TYPE_RADAR)
 	, sonar(modInfo.radarMipLevel, ILosType::LOS_TYPE_SONAR)
 	, seismic(modInfo.radarMipLevel, ILosType::LOS_TYPE_SEISMIC)
+	, sensor(modInfo.radarMipLevel, ILosType::LOS_TYPE_SENSOR)
 	, jammer(modInfo.radarMipLevel, ILosType::LOS_TYPE_JAMMER)
 	, sonarJammer(modInfo.radarMipLevel, ILosType::LOS_TYPE_SONAR_JAMMER)
 
@@ -631,6 +635,7 @@ CLosHandler::CLosHandler()
 	losTypes.push_back(&radar);
 	losTypes.push_back(&sonar);
 	losTypes.push_back(&seismic);
+	losTypes.push_back(&sensor);
 	losTypes.push_back(&jammer);
 	losTypes.push_back(&sonarJammer);
 
@@ -768,6 +773,11 @@ bool CLosHandler::InLos(const CUnit* unit, int allyTeam) const
 			return false;
 		}
 	}
+	CUnit const* closest;
+	this->Get
+
+	// Special rule for units operating radar
+	if(unit->radarOn && unit->radarRadius*unit->radarRadius*unit->radarObservability < closest->)
 
 	return (InLos(unit->pos, allyTeam) || InLos(unit->pos + unit->speed, allyTeam));
 }

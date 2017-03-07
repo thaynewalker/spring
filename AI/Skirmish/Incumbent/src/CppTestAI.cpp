@@ -98,7 +98,17 @@ int cpptestai::CCppTestAI::HandleEvent(int topic, const void* data) {
 		case EVENT_ENEMY_ENTER_RADAR:{
 			struct SEnemyEnterRadarEvent* evt((struct SEnemyEnterRadarEvent*) data);
 			std::cout << "Saw enemy " << evt->enemy << " of " << callback->GetEnemyUnits().size() << "\n";
-			springai::Unit* enemy(callback->GetEnemyUnits()[evt->enemy]);
+			springai::Unit* enemy(nullptr);
+			for(auto const e:callback->GetEnemyUnits()){
+				if(e->GetUnitId()==evt->enemy){
+					enemy=e;
+					break;
+				}
+			}
+			if(!enemy){
+				std::cout << "Could not find enemy by ID: "<<evt->enemy << std::endl;
+			}
+
 			std::vector<springai::Unit*> const& friendlyUnits(callback->GetFriendlyUnits());
 
 			springai::Unit* closest(nullptr);
@@ -119,11 +129,18 @@ int cpptestai::CCppTestAI::HandleEvent(int topic, const void* data) {
 			}
 
 			if(closest){
+				std::cout << "Enemy was seen by " << closest->GetUnitId() << std::endl;
+				if(std::string(closest->GetDef()->GetType()).find("SAM")){
+					// SAM - Turn on radar
+					std::cout << "EVENT: SAM - Turning on Radar\n";
+					closest->Attack()
+				}
+				if(std::string(closest->GetDef()->GetType()).find("EW")){
+					// EW - Simulate a comms event from the unit to other units
+				}
 
 			}
 
-			// EW - Simulate a comms event from the unit to other units
-			// SAM - Turn on radar
 			break;
 		}
 		case EVENT_ENEMY_DESTROYED: {

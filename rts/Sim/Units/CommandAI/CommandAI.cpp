@@ -121,6 +121,30 @@ CCommandAI::CCommandAI(CUnit* owner):
 		possibleCommands.push_back(commandDescriptionCache->GetPtr(c));
 	}
 
+	if (HasRadar()) {
+		SCommandDescription c;
+		if(!owner->radarOn){
+
+			c.id   = CMD_RADAR_ON;
+			c.type = CMDTYPE_ICON_UNIT_OR_MAP;
+
+			c.action    = "radarOn";
+			c.name      = "RadarOn";
+			c.tooltip   = c.name + ": Turns on radar";
+			c.mouseicon = c.name;
+			possibleCommands.push_back(commandDescriptionCache->GetPtr(c));
+		}else{
+			c.id   = CMD_RADAR_OFF;
+			c.type = CMDTYPE_ICON_UNIT_OR_MAP;
+
+			c.action    = "radarOff";
+			c.name      = "RadarOff";
+			c.tooltip   = c.name + ": Turns off radar";
+			c.mouseicon = c.name;
+			possibleCommands.push_back(commandDescriptionCache->GetPtr(c));
+		}
+	}
+
 	if (IsAttackCapable()) {
 		SCommandDescription c;
 
@@ -469,6 +493,11 @@ void CCommandAI::AddCommandDependency(const Command& c) {
 }
 
 
+bool CCommandAI::HasRadar() const
+{
+	return (owner->unitDef->GetRadarRadius());
+}
+
 bool CCommandAI::IsAttackCapable() const
 {
 	const UnitDef* ud = owner->unitDef;
@@ -564,6 +593,8 @@ bool CCommandAI::AllowedCommand(const Command& c, bool fromSynced)
 	// TODO check if the command is in the map first, for more commands
 	switch (cmdID) {
 		case CMD_MOVE:
+		case CMD_RADAR_ON:
+		case CMD_RADAR_OFF:
 		case CMD_ATTACK:
 		case CMD_AREA_ATTACK:
 		case CMD_RECLAIM:
@@ -614,6 +645,16 @@ bool CCommandAI::AllowedCommand(const Command& c, bool fromSynced)
 				return false;
 			// fall through
 
+        case CMD_RADAR_ON:{
+        	if(HasRadar() && owner){
+        		owner->radarOn=true;
+        	}
+        }
+		case CMD_RADAR_OFF: {
+			if(HasRadar() && owner){
+				owner->radarOn=false;
+			}
+		}
 		case CMD_ATTACK: {
 			if (!IsAttackCapable())
 				return false;

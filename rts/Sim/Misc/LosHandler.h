@@ -119,6 +119,7 @@ public:
 		LOS_TYPE_RADAR,
 		LOS_TYPE_SONAR,
 		LOS_TYPE_JAMMER,
+		LOS_TYPE_SENSOR,
 		LOS_TYPE_SEISMIC,
 		LOS_TYPE_SONAR_JAMMER,
 		LOS_TYPE_COUNT
@@ -294,6 +295,7 @@ public:
 	ILosType radar;
 	ILosType sonar;
 	ILosType seismic;
+	ILosType sensor;
 	ILosType jammer;
 	ILosType sonarJammer;
 
