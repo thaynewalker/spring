@@ -19,9 +19,9 @@
 #include <ostream>
 
 incumbent::Incumbent::Incumbent(springai::OOAICallback* callback):
-		callback(callback),
-		skirmishAIId(callback != NULL ? callback->GetSkirmishAIId() : -1)
-		{}
+callback(callback),
+skirmishAIId(callback != NULL ? callback->GetSkirmishAIId() : -1)
+{}
 
 incumbent::Incumbent::~Incumbent() {}
 
@@ -38,138 +38,133 @@ static std::ostream& operator <<(std::ostream& ss, springai::AIFloat3 const& vec
 }
 static std::ostream& operator <<(std::ostream& ss, springai::Unit *const unit){
 	springai::UnitDef* unitDef(unit->GetDef());
-	ss<<"Unit "<<unitDef->GetType()<<"-"<<unit->GetUnitId()<<":"<<"\n  "
+	ss<<"Unit "<<unitDef->GetName()<<"-"<<unit->GetUnitId()<<":"<<"\n  "
 			<< "NAME: "<<unitDef->GetName()<<"\n  "
 			<< "HNAME: "<<unitDef->GetHumanName()<<"\n  "
+			<< "DESC: "<<unitDef->GetTooltip()<<"\n  "
 			<< "CATEGORY: "<<unitDef->GetCategoryString()<<"\n  "
 			<< "AIR LOS: "<<unitDef->GetAirLosRadius()<<"\n  "
 			<< "JAM RADIUS: "<<unitDef->GetJammerRadius()<<"\n  "
 			<< "LOS HEIGHT: "<<unitDef->GetLosHeight()<<"\n  "
 			<< "LOS RADIUS: "<<unitDef->GetLosRadius()<<"\n  "
+			<< "AIR RADIUS: "<<unitDef->GetAirLosRadius()<<"\n  "
 			<< "RADAR ON: "<<unit->IsRadarOn()<<"\n  "
 			<< "RADAR RADIUS: "<<unitDef->GetRadarRadius()<<"\n  "
 			<< "LOC: "<<unit->GetPos()<<"\n  "
 			<< "VEL: "<<unit->GetVel();
 	return ss;
 }
+
+static std::ostream& operator <<(std::ostream& ss, springai::Unit & unit){
+	ss<<unit.GetDef()->GetTooltip()<<"-"<<unit.GetUnitId();
+	return ss;
+}
 int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 
 	switch (topic) {
-		case EVENT_UNIT_CREATED: {
-			//struct SUnitCreatedEvent* evt = (struct SUnitCreatedEvent*) data;
-			//int unitId = evt->unit;
+	case EVENT_UNIT_CREATED: {
+		friends=callback->GetFriendlyUnits();
+		//struct SUnitCreatedEvent* evt = (struct SUnitCreatedEvent*) data;
+		//int unitId = evt->unit;
 
-			// TODO: wrap events and commands too
+		// TODO: wrap events and commands too
 
-			const std::vector<springai::Unit*> friendlyUnits = callback->GetFriendlyUnits();
-			std::string msgText = std::string("HELLO Engine (from Incumbent), Unit# ") + IntToString(friendlyUnits.size());
-			if (!friendlyUnits.empty()) {
-				springai::Unit* unit = friendlyUnits[0];
-				std::cout << unit << "\n";
-				springai::UnitDef* unitDef = unit->GetDef();
-				std::string unitDefName = unitDef->GetName();
-				msgText = msgText + ", first friendly units def name is: " + unitDefName;
+		const std::vector<springai::Unit*> friendlyUnits = callback->GetFriendlyUnits();
+		std::string msgText = std::string("HELLO Engine (from Incumbent), Unit# ") + IntToString(friendlyUnits.size());
+		if (!friendlyUnits.empty()) {
+			springai::Unit* unit = friendlyUnits[0];
+			springai::UnitDef* unitDef = unit->GetDef();
+			std::string unitDefName = unitDef->GetName();
+			msgText = msgText + ", first friendly units def name is: " + unitDefName;
+			if(std::string(unit->GetDef()->GetTooltip()).find("SAM")!=std::string::npos){
+				unit->SetMoveState(MOVESTATE_HOLDPOS,0);
+				unit->SetFireState(FIRESTATE_RETURNFIRE,0);
+				unit->RadarOff(0);
 			}
-			callback->GetGame()->SendTextMessage(msgText.c_str(), 0);
+			std::cout << unit << "\n";
+		}
+		callback->GetGame()->SendTextMessage(msgText.c_str(), 0);
 
-			break;
-		}
-		case EVENT_COMMAND_FINISHED: {
-			break;
-		}
-		case EVENT_WEAPON_FIRED: {
-			struct SWeaponFiredEvent* evt((struct SWeaponFiredEvent*) data);
-			springai::WeaponDef* wpn(callback->GetWeaponDefs()[evt->weaponDefId]);
-			float intensity(wpn->GetIntensity());
-			std::cout << "IR event intensity: " << intensity << "\n";
-			break;
-		}
-		case EVENT_ENEMY_LEAVE_LOS:{
-			// Wait for a small amount of time, then turn off
-			break;
-		}
-		case EVENT_ENEMY_ENTER_LOS:{
-			// Ground units may fire weapon or something
-			break;
-		}
-		case EVENT_ENEMY_LEAVE_RADAR:{
-			// Wait for a small amount of time, then turn off radar (for SA units)
-			break;
-		}
-		case EVENT_ENEMY_ENTER_RADAR:{
-			struct SEnemyEnterRadarEvent* evt((struct SEnemyEnterRadarEvent*) data);
-			springai::Unit* enemy(nullptr);
-			for(auto const e:callback->GetEnemyUnits()){
-				if(e->GetUnitId()==evt->enemy){
-					std::cout << "Enemy entered radar: "<< e << std::endl;
-					enemy=e;
-					break;
+		break;
+	}
+	case EVENT_COMMAND_FINISHED: {
+		break;
+	}
+	case EVENT_WEAPON_FIRED: {
+		struct SWeaponFiredEvent* evt((struct SWeaponFiredEvent*) data);
+		springai::WeaponDef* wpn(callback->GetWeaponDefs()[evt->weaponDefId]);
+		float intensity(wpn->GetIntensity());
+		std::cout << "IR event intensity: " << intensity << "\n";
+		break;
+	}
+	case EVENT_ENEMY_LEAVE_LOS:{
+		// Wait for a small amount of time, then turn off
+		break;
+	}
+	case EVENT_ENEMY_ENTER_LOS:{
+		// Ground units may fire weapon or something
+		break;
+	}
+	case EVENT_ENEMY_LEAVE_RADAR:{
+		// Wait for a small amount of time, then turn off radar (for SA units)
+		break;
+	}
+	case EVENT_ENEMY_ENTER_RADAR:{
+		break;
+	}
+	case EVENT_ENEMY_DESTROYED: {
+		// Points
+		break;
+	}
+	case EVENT_ENEMY_DAMAGED: {
+		// Points
+		break;
+	}
+	case EVENT_UNIT_DAMAGED:{
+		// Point loss
+		break;
+	}
+	case EVENT_UNIT_DESTROYED: {
+		// Point loss
+		break;
+	}
+	default: {
+		static const std::string SAM("SAM");
+		static const std::string EW("EW");
+
+		std::vector<springai::Unit*> const& enemies(callback->GetEnemyUnits());
+		observationTable.clear();
+		inrangeTable.clear();
+
+		//std::cout << "=================================\n";
+		for(auto const f: friends){
+			//std::cout << *f << ":\n";
+			for(auto const e: enemies){
+				float d(f->GetPos().distance(e->GetPos()));
+				//std::cout << "    Enemy " << *e << uint64_t(e) << " dist = " << d;
+				if(f->IsRadarOn()&&fless(d,f->GetDef()->GetAirLosRadius())){
+					observationTable[e].push_back(f);
+					//std::cout << " inrange ("<<observationTable[e].size()<<")\n";
+				}else if(!f->IsRadarOn()&&f->GetDef()->GetTooltip()==SAM&&fless(d,callback->GetWeaponDefByName("rocket")->GetRange())){
+					inrangeTable[e].push_back(f);
 				}
 			}
-			if(!enemy){
-				//std::cout << "Could not find enemy by ID: "<<evt->enemy << std::endl;
-				return 0;
-			}
-
-			std::vector<springai::Unit*> const& friendlyUnits(callback->GetFriendlyUnits());
-
-			springai::Unit* closest(nullptr);
-			float dist(99999999);
-
-			std::vector<springai::Unit*> radarVisible;
-
-			for(auto const f: friendlyUnits){
-				float d(f->GetPos().distance(enemy->GetPos()));
-				std::cout << "Enemy distance from " << f << " = " << d << std::endl;
-				if(fless(d,f->GetDef()->GetRadarRadius())){
-					std::cout << "In radar range of unit " << f->GetUnitId() << "\n";
-					radarVisible.push_back(f);
-					if(f->IsRadarOn()){
-						dist=d;
-						closest=f;
+		}
+		if(inrangeTable.size()){
+			for(auto const& e: observationTable){
+				for(auto const& closest: e.second){ //Radar is currently on...
+					// Notify all neighbors who are in range of the entity
+					for(auto const& neighbor: inrangeTable[e.first]){
+						neighbor->RadarOn(3,0);
+						neighbor->SetMoveState(MOVESTATE_MANEUVER,0);
+						neighbor->SetFireState(FIRESTATE_FIREATWILL,0);
 					}
 				}
 			}
+		}
 
-			if(closest){
-				std::cout << "Enemy was seen by " << closest->GetUnitId() << std::endl;
-				if(std::string(closest->GetDef()->GetType()).find("SAM")){
-					// SAM - Turn on radar
-					std::cout << "EVENT: SAM - Turning on Radar\n";
-					closest->RadarOn(3,0,100); // Delay 3 seconds, no options, stay in queue for 100
-				}
-				if(std::string(closest->GetDef()->GetType()).find("EW")){
-					// EW - Simulate a comms event from the unit to other units
-
-					std::cout << "EVENT: EW/ASV - Notifying neighbors - COMMS EVENT\n";
-					for(auto const r: radarVisible){
-						r->RadarOn(3,0,100);
-					}
-				}
-
-			}
-
-			break;
-		}
-		case EVENT_ENEMY_DESTROYED: {
-			// Points
-			break;
-		}
-		case EVENT_ENEMY_DAMAGED: {
-			// Points
-			break;
-		}
-		case EVENT_UNIT_DAMAGED:{
-			// Point loss
-			break;
-		}
-		case EVENT_UNIT_DESTROYED: {
-			// Point loss
-			break;
-		}
-		default: {
-			break;
-		}
+		break;
+	}
 	}
 
 	// signal: everything went OK

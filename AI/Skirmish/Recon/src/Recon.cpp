@@ -22,7 +22,9 @@ recon::Recon::Recon(springai::OOAICallback* callback):
 		numPlanes(0),
 		reconUnitDef(0),
 		hq(0)
-		{ }
+		{
+			std::vector<springai::AIFloat3> wpt;
+		}
 
 recon::Recon::~Recon() {}
 
@@ -61,14 +63,20 @@ void recon::Recon::AddPlane(int unitId){
 	springai::Unit* u(GetFriendlyUnitById(unitId));
 	if(u){
 		std::string name(u->GetDef()->GetName());
-		if(name.find("recon")!=std::string::npos){
-			this->numPlanes++;
+		if(name.find("helicopter")!=std::string::npos){
+			u->SetFireState(FIRESTATE_RETURNFIRE);
+			u2i[unitId]=numPlanes;
+			std::vector<springai::AIFloat3> wpts;
+			for(int i=0; i<10; ++i)
+				wpts.push_back(springai::AIFloat3(rand()%5000,rand()%2000+100,rand()%5000));
+			waypoints.push_back(wpts);
+			ustat.push_back(0);
+
+			numPlanes++;
 			std::cout << "now have " << this->numPlanes << "planes\n";
 			std::cout << u << "\n";
-			springai::AIFloat3 dest = {500,1500,500};
-			//u->MoveTo(dest,0);
-			u->SetOn(true,0);
-			u->PatrolTo(dest,0);
+			u->MoveTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
+
 		}
 	}
 }
@@ -100,37 +108,23 @@ int recon::Recon::HandleEvent(int topic, const void* data) {
 
 			AddPlane(unitId);
 
-			if(!hq){
-				const std::vector<springai::Unit*> friendlyUnits = callback->GetFriendlyUnits();
-				for(auto u: friendlyUnits){
-
-					std::string name(u->GetDef()->GetName());
-					if(prefix == ""){
-						prefix=name.substr(0,3);
-					}
-					if((name.find("hq")!=std::string::npos || name.find("comissar")!=std::string::npos) && std::string("BUILDING")==u->GetDef()->GetCategoryString()){
-						hq=u;
-						break;
-					}
-				}
+			break;
+		}
+		case EVENT_COMMAND_FINISHED: {
+			struct SCommandFinishedEvent* evt = (struct SCommandFinishedEvent*) data;
+			int unitId = evt->unitId;
+			springai::Unit* u(GetFriendlyUnitById(unitId));
+			std::cout << "Command finished by " << u << "\n";
+			if(ustat[u2i[unitId]]>waypoints[u2i[unitId]].size()-1){
+				// No more commands... do nothing
+			}else if(ustat[u2i[unitId]]>waypoints[u2i[unitId]].size()-2){
+				std::cout << "patrol\n";
+				// Last command... patrol between points
+				u->PatrolTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
+			}else{
+				std::cout << "move\n";
+				u->MoveTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
 			}
-
-			if(prefix != "" && !reconUnitDef){
-				std::vector<springai::UnitDef*> defs(callback->GetUnitDefs());
-				for(auto const d: defs){
-					std::string n(d->GetName());
-					if(n.find("recon")!=std::string::npos && n.find(prefix)!=std::string::npos){
-						reconUnitDef=d;
-						break;
-					}
-				}
-			}
-
-			if(hq && reconUnitDef && numPlanes<10){
-				hq->Build(reconUnitDef,hq->GetPos(),0,0,0);
-				std::cout << "Building " << reconUnitDef->GetName() << "\n";
-			}
-
 			break;
 		}
 		default: {
