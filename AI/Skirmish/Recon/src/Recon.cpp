@@ -23,7 +23,6 @@ recon::Recon::Recon(springai::OOAICallback* callback):
 		reconUnitDef(0),
 		hq(0)
 		{
-			std::vector<springai::AIFloat3> wpt;
 		}
 
 recon::Recon::~Recon() {}
@@ -106,6 +105,15 @@ int recon::Recon::HandleEvent(int topic, const void* data) {
 			struct SUnitCreatedEvent* evt = (struct SUnitCreatedEvent*) data;
 			int unitId = evt->unit;
 
+	springai::Unit* unit(callback->GetFriendlyUnits()[0]);
+	if(unit){
+		std::cout << "Moving unit randomly\n";
+		for(int i(0);i<10;++i){
+			springai::AIFloat3 pos(rand()%10000,rand()%10000,rand()%10000);
+			std::cout << "Move to " << pos <<"\n";
+			unit->MoveTo(pos,0);
+		}
+	}
 			AddPlane(unitId);
 
 			break;
