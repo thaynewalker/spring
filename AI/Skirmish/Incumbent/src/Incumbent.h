@@ -32,9 +32,10 @@ class Incumbent {
 private:
 	springai::OOAICallback* callback;
 	int skirmishAIId;
-	std::map<springai::Unit*,std::vector<springai::Unit*> > observationTable;
+	// this map contains pointers in the friends table.
 	std::map<springai::Unit*,std::vector<springai::Unit*> > inrangeTable;
 	std::vector<springai::Unit*> friends;
+	unsigned frame;
 
 public:
 	Incumbent(springai::OOAICallback* callback);

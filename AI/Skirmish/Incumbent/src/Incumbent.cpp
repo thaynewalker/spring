@@ -20,8 +20,11 @@
 
 incumbent::Incumbent::Incumbent(springai::OOAICallback* callback):
 callback(callback),
-skirmishAIId(callback != NULL ? callback->GetSkirmishAIId() : -1)
-{}
+skirmishAIId(callback != NULL ? callback->GetSkirmishAIId() : -1),
+frame(0)
+{
+//std::map<int,std::vector<springai::AIFloat3>> unitplans(callback->GetAllyTeams()[0]->GetUnitPlans());
+}
 
 incumbent::Incumbent::~Incumbent() {}
 
@@ -63,7 +66,6 @@ int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 
 	switch (topic) {
 	case EVENT_UNIT_CREATED: {
-		friends=callback->GetFriendlyUnits();
 		//struct SUnitCreatedEvent* evt = (struct SUnitCreatedEvent*) data;
 		//int unitId = evt->unit;
 
@@ -129,12 +131,16 @@ int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 		break;
 	}
 	default: {
+		if(++frame % 10) break; //throttle.
 		static const std::string SAM("SAM");
 		static const std::string EW("EW");
 
 		std::vector<springai::Unit*> const& enemies(callback->GetEnemyUnits());
-		observationTable.clear();
+		friends=callback->GetFriendlyUnits();
 		inrangeTable.clear();
+
+		springai::Unit* closest(0);
+		double dist(9999999999);
 
 		//std::cout << "=================================\n";
 		for(auto const f: friends){
@@ -142,8 +148,9 @@ int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 			for(auto const e: enemies){
 				float d(f->GetPos().distance(e->GetPos()));
 				//std::cout << "    Enemy " << *e << uint64_t(e) << " dist = " << d;
-				if(f->IsRadarOn()&&fless(d,f->GetDef()->GetAirLosRadius())){
-					observationTable[e].push_back(f);
+				if(f->IsRadarOn()&&fless(d,dist)){
+					dist = d;
+					closest=f;
 					//std::cout << " inrange ("<<observationTable[e].size()<<")\n";
 				}else if(!f->IsRadarOn()&&f->GetDef()->GetTooltip()==SAM&&fless(d,callback->GetWeaponDefByName("rocket")->GetRange())){
 					inrangeTable[e].push_back(f);
@@ -151,16 +158,16 @@ int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 			}
 		}
 		if(inrangeTable.size()){
-			for(auto const& e: observationTable){
-				for(auto const& closest: e.second){ //Radar is currently on...
+				for(auto const& e: enemies){ //Radar is currently on...
 					// Notify all neighbors who are in range of the entity
-					for(auto const& neighbor: inrangeTable[e.first]){
+					for(auto const& neighbor: inrangeTable[e]){
 						neighbor->RadarOn(3,0);
 						neighbor->SetMoveState(MOVESTATE_MANEUVER,0);
 						neighbor->SetFireState(FIRESTATE_FIREATWILL,0);
+						if(closest)
+							std::cout << "COMMS EVENT from " << *closest << "\n";
 					}
 				}
-			}
 		}
 
 		break;
