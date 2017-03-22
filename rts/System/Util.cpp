@@ -6,6 +6,7 @@
 #endif
 #include <cstring>
 #include <cinttypes>
+#include <iterator>
 
 
 std::string StringReplace(const std::string& text,
@@ -261,4 +262,21 @@ std::string UnicodeToUtf8(char32_t ch)
 	}
 
 	return str;
+}
+
+template<typename Out>
+void util::split(const std::string &s, char delim, Out result) {
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        *(result++) = item;
+    }
+}
+
+
+std::vector<std::string> util::split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, std::back_inserter(elems));
+    return elems;
 }

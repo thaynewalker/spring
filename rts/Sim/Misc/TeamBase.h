@@ -9,6 +9,7 @@
 #include "System/UnorderedMap.hpp"
 #include "System/creg/creg_cond.h"
 
+#include "Sim/Units/UnitLoader.h"
 
 class TeamBase
 {
@@ -19,6 +20,10 @@ public:
 
 	TeamBase();
 	virtual ~TeamBase() {}
+
+	virtual std::vector<float3> const& GetUnitPlans(int unitId) const;
+	void CreateUnits();
+	virtual signed GetUnitIndex(int unitId)const{return 0;}
 
 	void SetValue(const std::string& key, const std::string& value);
 	const customOpts& GetAllValues() const {
@@ -89,8 +94,12 @@ public:
 	int teamAllyteam;
 
 	static unsigned char teamDefaultColor[10][4];
+	int teamNum;
 
 protected:
+	// Startup units and their plans
+	std::vector<std::vector<float3> > unitplans;
+	std::vector<std::string> names;
 	/**
 	 * All the teams resource income is multiplied by this factor.
 	 * The default value is 1.0f, the valid range is [0.0, FLOAT_MAX].

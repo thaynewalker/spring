@@ -11,57 +11,24 @@
 #include "Unit.h"
 #include "UnitDef.h"
 #include "Utils.h"
+#include "AIUtils.h"
 #include "WeaponDef.h"
 #include "Game.h"
 
 #include <string>
 #include <iostream>
-#include <ostream>
+
 
 incumbent::Incumbent::Incumbent(springai::OOAICallback* callback):
 callback(callback),
 skirmishAIId(callback != NULL ? callback->GetSkirmishAIId() : -1),
 frame(0)
 {
-//std::map<int,std::vector<springai::AIFloat3>> unitplans(callback->GetAllyTeams()[0]->GetUnitPlans());
 }
 
 incumbent::Incumbent::~Incumbent() {}
 
-static inline std::string IntToString(int i, const std::string& format = "%i")
-{
-	char buf[64];
-	SNPRINTF(buf, sizeof(buf), format.c_str(), i);
-	return std::string(buf);
-}
 
-static std::ostream& operator <<(std::ostream& ss, springai::AIFloat3 const& vec){
-	ss<<vec.x<<","<<vec.y<<","<<vec.z;
-	return ss;
-}
-static std::ostream& operator <<(std::ostream& ss, springai::Unit *const unit){
-	springai::UnitDef* unitDef(unit->GetDef());
-	ss<<"Unit "<<unitDef->GetName()<<"-"<<unit->GetUnitId()<<":"<<"\n  "
-			<< "NAME: "<<unitDef->GetName()<<"\n  "
-			<< "HNAME: "<<unitDef->GetHumanName()<<"\n  "
-			<< "DESC: "<<unitDef->GetTooltip()<<"\n  "
-			<< "CATEGORY: "<<unitDef->GetCategoryString()<<"\n  "
-			<< "AIR LOS: "<<unitDef->GetAirLosRadius()<<"\n  "
-			<< "JAM RADIUS: "<<unitDef->GetJammerRadius()<<"\n  "
-			<< "LOS HEIGHT: "<<unitDef->GetLosHeight()<<"\n  "
-			<< "LOS RADIUS: "<<unitDef->GetLosRadius()<<"\n  "
-			<< "AIR RADIUS: "<<unitDef->GetAirLosRadius()<<"\n  "
-			<< "RADAR ON: "<<unit->IsRadarOn()<<"\n  "
-			<< "RADAR RADIUS: "<<unitDef->GetRadarRadius()<<"\n  "
-			<< "LOC: "<<unit->GetPos()<<"\n  "
-			<< "VEL: "<<unit->GetVel();
-	return ss;
-}
-
-static std::ostream& operator <<(std::ostream& ss, springai::Unit & unit){
-	ss<<unit.GetDef()->GetTooltip()<<"-"<<unit.GetUnitId();
-	return ss;
-}
 int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 
 	switch (topic) {
@@ -79,8 +46,8 @@ int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 			std::string unitDefName = unitDef->GetName();
 			msgText = msgText + ", first friendly units def name is: " + unitDefName;
 			if(std::string(unit->GetDef()->GetTooltip()).find("SAM")!=std::string::npos){
-				unit->SetMoveState(MOVESTATE_HOLDPOS,0);
-				unit->SetFireState(FIRESTATE_RETURNFIRE,0);
+				unit->SetMoveState(utils::MOVESTATE_HOLDPOS,0);
+				unit->SetFireState(utils::FIRESTATE_RETURNFIRE,0);
 				unit->RadarOff(0);
 			}
 			std::cout << unit << "\n";
@@ -131,11 +98,12 @@ int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 		break;
 	}
 	default: {
-		if(++frame % 10) break; //throttle.
+		if(frame++ % 10) break; //throttle.
 		static const std::string SAM("SAM");
 		static const std::string EW("EW");
 
 		std::vector<springai::Unit*> const& enemies(callback->GetEnemyUnits());
+
 		friends=callback->GetFriendlyUnits();
 		inrangeTable.clear();
 
@@ -162,8 +130,8 @@ int incumbent::Incumbent::HandleEvent(int topic, const void* data) {
 					// Notify all neighbors who are in range of the entity
 					for(auto const& neighbor: inrangeTable[e]){
 						neighbor->RadarOn(3,0);
-						neighbor->SetMoveState(MOVESTATE_MANEUVER,0);
-						neighbor->SetFireState(FIRESTATE_FIREATWILL,0);
+						neighbor->SetMoveState(utils::MOVESTATE_MANEUVER,0);
+						neighbor->SetFireState(utils::FIRESTATE_FIREATWILL,0);
 						if(closest)
 							std::cout << "COMMS EVENT from " << *closest << "\n";
 					}

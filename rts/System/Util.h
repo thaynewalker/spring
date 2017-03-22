@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 
+
 #include "System/maindefines.h"
 
 /*
@@ -338,4 +339,10 @@ static inline int Utf8PrevChar(const std::string& str, int pos)
 	}
 	return oldPos;
 }
+
+namespace util{
+template<typename Out>
+void split(const std::string &s, char delim, Out result);
+std::vector<std::string> split(const std::string &s, char delim);
+};
 #endif // UTIL_H

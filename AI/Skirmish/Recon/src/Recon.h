@@ -16,19 +16,7 @@ namespace recon {
  */
 class Recon {
 
-	enum {
-	        MOVESTATE_NONE     = -1,
-	        MOVESTATE_HOLDPOS  =  0,
-	        MOVESTATE_MANEUVER =  1,
-	        MOVESTATE_ROAM     =  2,
-	};
-	enum {
-	        FIRESTATE_NONE       = -1,
-	        FIRESTATE_HOLDFIRE   =  0,
-	        FIRESTATE_RETURNFIRE =  1,
-	        FIRESTATE_FIREATWILL =  2,
-	        FIRESTATE_FIREATNEUTRAL =  3,
-	};
+
 
 private:
 	springai::OOAICallback* callback;
@@ -38,12 +26,13 @@ private:
     springai::UnitDef* reconUnitDef;
     springai::Unit* hq;
     void AddPlane(int unitId);
-    void GetUnitById(int id, std::vector<springai::Unit*> const& units, springai::Unit** unit) const;
     springai::Unit* GetFriendlyUnitById(int id) const;
     springai::Unit* GetEnemyUnitById(int id) const;
     std::vector<std::vector<springai::AIFloat3> > waypoints;
     std::map<int,int> u2i;
     std::vector<int> ustat;
+	std::vector<springai::Unit*> friends;
+	int frame;
 public:
 	Recon(springai::OOAICallback* callback);
 	~Recon();

@@ -4,6 +4,9 @@
 #define FLOAT3_H
 
 #include <cassert>
+#include "Util.h"
+#include <string>
+#include <stdlib.h>
 
 #include "System/BranchPrediction.h"
 #include "lib/streflop/streflop_cond.h"
@@ -26,6 +29,18 @@ class float3
 public:
 	CR_DECLARE_STRUCT(float3)
 
+	void parse(std::string const& point, char delim){
+		std::vector<std::string> dat(util::split(point,delim));
+		if(dat.size()==2){
+			x=atof(dat[0].c_str());
+			z=atof(dat[1].c_str());
+		}
+		if(dat.size()>2){
+			x=atof(dat[0].c_str());
+			y=atof(dat[1].c_str());
+			z=atof(dat[2].c_str());
+		}
+	}
 
 	/**
 	 * @brief Constructor
@@ -38,6 +53,13 @@ public:
 	float3(const float x = 0.0f, const float y = 0.0f, const float z = 0.0f)
 			: x(x), y(y), z(z) {}
 
+	float3(std::string const& point):x(0),y(0),z(0){
+		parse(point,'/');
+	}
+
+	float3(std::string const& point, char delim):x(0),y(0),z(0){
+		parse(point,delim);
+	}
 	/**
 	 * @brief float[3] Constructor
 	 * @param f float[3] to assign
@@ -61,6 +83,10 @@ public:
 		return *this;
 	}
 
+	float3& operator= (std::string const& dat){
+		parse(dat,'/');
+		return *this;
+	}
 	/**
 	 * @brief Copy x, y, z into float[3]
 	 * @param f float[3] to copy values into
@@ -572,6 +598,9 @@ public:
 		y = 0.0f; return SafeANormalize();
 	}
 
+	float HeadingTo(float3 const& dest){
+		return fmod(((3.141592/2.0-atan2(dest.z-z,dest.x-x))*180.+360.),360.);
+	}
 
 	/**
 	 * @brief length squared

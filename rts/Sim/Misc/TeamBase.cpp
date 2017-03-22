@@ -4,6 +4,8 @@
 
 #include <cstdlib>
 #include <sstream>
+#include <algorithm>
+#include <iterator>
 
 #include "System/Util.h"
 #include "System/creg/STL_Map.h"
@@ -40,6 +42,7 @@ TeamBase::TeamBase() :
 	leader(-1),
 	teamStartNum(-1),
 	teamAllyteam(-1),
+	teamNum(-1),
 	incomeMultiplier(1.0f)
 {
 	color[0] = 255;
@@ -88,11 +91,43 @@ void TeamBase::SetValue(const std::string& key, const std::string& value)
 		if (!value.empty())
 			startPos.z = atoi(value.c_str());
 	}
+	else if (key == "unitplans") {
+		if (!value.empty()){
+			std::vector<std::string> paths(util::split(value,'+'));
+			for(std::string p: paths){
+				std::vector<std::string> locs(util::split(p,','));
+				names.push_back(locs.front());
+				locs.erase(locs.begin());
+				std::vector<float3> path;
+				for(float3 l:locs){
+					path.push_back(l);
+				}
+				unitplans.push_back(path);
+			}
+		}
+	}
 	else {
 		customValues[key] = value;
 	}
 }
 
+std::vector<float3> const& TeamBase::GetUnitPlans(int unitId) const{
+		return unitplans[GetUnitIndex(unitId)];
+}
+void TeamBase::CreateUnits(){
+	for(int i(0); i<names.size(); ++i){
+		UnitLoadParams params;
+		params.builder=NULL;
+		params.pos=unitplans[i].front();
+		params.speed=ZeroVector;
+		params.unitID=-1;
+		params.beingBuilt=false;
+		params.teamID=teamNum;
+		params.facing=unitplans[i].size()>1?unitplans[i].front().HeadingTo(unitplans[i][2]):0.0;
+		CUnit* unit(unitLoader->LoadUnit(names[i],params));
+		//unit->Activate();
+	}
+}
 
 void TeamBase::SetAdvantage(float advantage) {
 

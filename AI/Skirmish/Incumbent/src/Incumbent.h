@@ -8,24 +8,8 @@
 
 namespace incumbent {
 
-enum {
-        MOVESTATE_NONE     = -1,
-        MOVESTATE_HOLDPOS  =  0,
-        MOVESTATE_MANEUVER =  1,
-        MOVESTATE_ROAM     =  2,
-};
-enum {
-        FIRESTATE_NONE       = -1,
-        FIRESTATE_HOLDFIRE   =  0,
-        FIRESTATE_RETURNFIRE =  1,
-        FIRESTATE_FIREATWILL =  2,
-        FIRESTATE_FIREATNEUTRAL =  3,
-};
-
 /**
  * This is the main C++ entry point of this AI.
- * 
- * @author	Robin Vobruba <hoijui.quaero@gmail.com>
  */
 class Incumbent {
 

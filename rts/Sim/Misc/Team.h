@@ -71,9 +71,9 @@ public:
 
 	void AddUnit(CUnit* unit, AddType type);
 	void RemoveUnit(CUnit* unit, RemoveType type);
+	virtual signed GetUnitIndex(int unitId) const;
 
 public:
-	int teamNum;
 	unsigned int maxUnits;
 
 	bool isDead;

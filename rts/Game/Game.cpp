@@ -87,6 +87,7 @@
 #include "Sim/Units/Scripts/CobEngine.h"
 #include "Sim/Units/Scripts/UnitScriptEngine.h"
 #include "Sim/Units/UnitHandler.h"
+#include "Sim/Units/UnitLoader.h"
 #include "Sim/Units/UnitDefHandler.h"
 #include "Sim/Weapons/WeaponDefHandler.h"
 #include "UI/CommandColors.h"
@@ -689,6 +690,12 @@ void CGame::LoadInterface()
 	// note: disable is needed in case user reloads before StartPlaying
 	GameSetupDrawer::Disable();
 	GameSetupDrawer::Enable();
+
+	loadscreen->SetLoadMessage("Creating Units");
+	for (int t = 0; t < teamHandler->ActiveTeams(); ++t) {
+		teamHandler->Team(t)->CreateUnits();
+	}
+
 }
 
 void CGame::LoadLua()

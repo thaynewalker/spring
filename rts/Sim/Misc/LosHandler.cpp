@@ -883,7 +883,7 @@ bool CLosHandler::InSensor(const CUnit* unit, int allyTeam) const
 	if(!unit->radarOn){return false;}
 	float radarProp(unit->radarRadius*unit->unitDef->radarObservability*2.0);
 	const CTeam * team(teamHandler->Team(allyTeam));
-	CUnit const* closest;
+	//CUnit const* closest;
 	float best(9999999);
 	for(auto const u: team->units){
 		if(u->unitDef->radarSensor){
@@ -891,7 +891,7 @@ bool CLosHandler::InSensor(const CUnit* unit, int allyTeam) const
 
 			if(dist<best){
 				best=dist;
-				closest=u;
+				//closest=u;
 			}
 		}
 	}

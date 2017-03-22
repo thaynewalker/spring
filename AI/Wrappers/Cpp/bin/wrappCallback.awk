@@ -1320,7 +1320,7 @@ function printMember(fullName_m, memName_m, additionalIndices_m) {
 		}
 
 		if (!_isRetSize) {
-			conversionCode_post = conversionCode_post "\t\t" "delete[] " _arrayPaNa ";" "\n";
+			conversionCode_post = conversionCode_post "\t\t" "if(" _arrayPaNa "_raw_size) delete[] " _arrayPaNa ";" "\n";
 		}
 	}
 

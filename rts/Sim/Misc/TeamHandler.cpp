@@ -60,8 +60,8 @@ void CTeamHandler::LoadFromSetup(const CGameSetup* setup)
 	const int maxUnitsPerTeam = std::min(setup->maxUnitsPerTeam, int(MAX_UNITS / numTeams));
 
 	for (size_t i = 0; i < teams.size(); ++i) {
-		teams[i].teamNum = i;
 		teams[i] = setup->GetTeamStartingDataCont()[i];
+		teams[i].teamNum = i;
 
 		// all non-Gaia teams (within one allyteam) get and maintain the same unit-limit
 		// (because of this it would be better treated as a pool owned by class AllyTeam)

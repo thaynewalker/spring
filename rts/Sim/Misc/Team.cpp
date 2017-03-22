@@ -58,7 +58,6 @@ CR_REG_METADATA(CTeam, (
 //////////////////////////////////////////////////////////////////////
 
 CTeam::CTeam():
-	teamNum(-1),
 	maxUnits(0),
 	isDead(false),
 	gaia(false),
@@ -424,6 +423,14 @@ void CTeam::RemoveUnit(CUnit* unit, RemoveType type)
 			break;
 		}
 	}
+}
+
+signed CTeam::GetUnitIndex(int unitId)const{
+for(int i(0); i<units.size(); ++i){
+	if(units[i]->id==unitId)
+		return i;
+}
+return 0;
 }
 
 std::string CTeam::GetControllerName() const {

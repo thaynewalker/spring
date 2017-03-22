@@ -4201,6 +4201,22 @@ EXPORT(int) skirmishAiCallback_getAllyTeams(int skirmishAIId, int* teamIds, int 
 }
 
 
+EXPORT(int) skirmishAiCallback_Team_getUnitPaths(int skirmishAIId, int teamId, int unitId, float* paths, int pointsMaxSize) {
+	const CTeam* team = getTeam(teamId);
+
+	if (paths == nullptr)
+		return team->GetUnitPlans(unitId).size()*3;
+
+	int pn(0);
+	for(float3 const p: team->GetUnitPlans(unitId)){
+		paths[pn++]=p.x;
+		paths[pn++]=p.y;
+		paths[pn++]=p.z;
+	}
+	return pn;
+
+}
+
 EXPORT(float) skirmishAiCallback_Team_getRulesParamFloat(int skirmishAIId, int teamId, const char* rulesParamName, float defaultValue) {
 	const CTeam* team = getTeam(teamId);
 
@@ -5635,6 +5651,7 @@ static void skirmishAiCallback_init(SSkirmishAICallback* callback) {
 	callback->Team_hasAIController = &skirmishAiCallback_Team_hasAIController;
 	callback->getEnemyTeams = &skirmishAiCallback_getEnemyTeams;
 	callback->getAllyTeams = &skirmishAiCallback_getAllyTeams;
+	callback->getUnitPaths = &skirmishAiCallback_Team_getUnitPaths;
 	callback->Team_getRulesParamFloat = &skirmishAiCallback_Team_getRulesParamFloat;
 	callback->Team_getRulesParamString = &skirmishAiCallback_Team_getRulesParamString;
 	callback->getGroups = &skirmishAiCallback_getGroups;

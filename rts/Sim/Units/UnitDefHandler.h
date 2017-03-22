@@ -7,11 +7,12 @@
 #include <vector>
 
 #include "Sim/Misc/CommonDefHandler.h"
+#include "Sim/Units/UnitDef.h"
 #include "System/UnorderedMap.hpp"
 #include "System/UnorderedSet.hpp"
 
 class LuaTable;
-struct UnitDef;
+//struct UnitDef;
 struct GuiSoundSet;
 
 class LuaParser;

@@ -1365,6 +1365,8 @@ struct SSkirmishAICallback {
 
 	int               (CALLING_CONV *getAllyTeams)(int skirmishAIId, int* teamIds, int teamIds_sizeMax); //$ FETCHER:MULTI:IDs:Team:teamIds
 
+	int               (CALLING_CONV *getUnitPaths)(int skirmishAIId, int teamId, int unitId, float* paths, int paths_sizeMax); //$ ARRAY:paths
+
 	/**
 	 * @return float value of parameter if it's set, defaultValue otherwise.
 	 */
