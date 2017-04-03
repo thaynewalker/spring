@@ -13,3 +13,4 @@ add_library(engineSystemNet STATIC
 		"${CMAKE_CURRENT_SOURCE_DIR}/UnpackPacket.cpp"
 	)
 
+SET_TARGET_PROPERTIES(engineSystemNet PROPERTIES COMPILE_FLAGS "${PIC_FLAG}")

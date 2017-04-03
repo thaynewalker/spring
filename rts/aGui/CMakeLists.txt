@@ -23,3 +23,4 @@ add_library(engineaGui STATIC
 		"${CMAKE_CURRENT_SOURCE_DIR}/VerticalLayout.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Window.cpp"
 	)
+SET_TARGET_PROPERTIES(engineaGui PROPERTIES COMPILE_FLAGS "${PIC_FLAG}")

@@ -524,6 +524,7 @@ set (INSTALL_PREFIX_REL2CONFIG_DIR .)
 export (TARGETS ${TARGETS} FILE "${PROJECT_BINARY_DIR}/${PACKAGE_NAME}-targets.cmake")
 export (PACKAGE gflags)
 configure_file (cmake/config.cmake.in "${PROJECT_BINARY_DIR}/${PACKAGE_NAME}-config.cmake" @ONLY)
+set_target_properties(gflags_nothreads_static PROPERTIES COMPILE_FLAGS "-fPIC")
 
 # ----------------------------------------------------------------------------
 # testing - MUST follow the generation of the build tree config file
@@ -659,5 +660,4 @@ if (BUILD_PACKAGING)
   endif ()
 
   include (CPack)
-
 endif () # BUILD_PACKAGING

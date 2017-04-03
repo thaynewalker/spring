@@ -139,6 +139,8 @@ add_library(engineSim STATIC
 		"${CMAKE_CURRENT_SOURCE_DIR}/Weapons/WeaponTarget.cpp"
 	)
 
+set_target_properties(engineSim PROPERTIES COMPILE_FLAGS "-fPIC")
+
 include_directories(${GLEW_INCLUDE_DIR})
 
 if( CMAKE_COMPILER_IS_GNUCXX)
@@ -147,8 +149,9 @@ if( CMAKE_COMPILER_IS_GNUCXX)
 	if(APPLE)
 		MakeGlobalVar(SPRING_SIM_LIBRARIES "-Wl,-force_load" engineSim)
 	else()
-		MakeGlobalVar(SPRING_SIM_LIBRARIES "-Wl,-whole-archive" engineSim "-Wl,-no-whole-archive")
+		MakeGlobalVar(SPRING_SIM_LIBRARIES "-Wl,-whole-archive" engineSim "-Wl,-no-whole-archive -fPIC")
 	endif()
 else()
 	MakeGlobalVar(SPRING_SIM_LIBRARIES engineSim)
 endif()
+

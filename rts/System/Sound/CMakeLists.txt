@@ -12,6 +12,7 @@ SET(noSoundSources
 
 ADD_LIBRARY(no-sound STATIC EXCLUDE_FROM_ALL ${noSoundSources})
 set_target_properties(no-sound PROPERTIES COMPILE_FLAGS "-DNO_SOUND")
+set_target_properties(no-sound PROPERTIES COMPILE_FLAGS "-fPIC")
 
 
 # Define default sound implementation

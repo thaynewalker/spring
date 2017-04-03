@@ -34,13 +34,21 @@ ENDIF ()
 
 # headlessstubs are our stubs that replace libGL, libGLU, libGLEW, libSDL (yes really!)
 LIST(APPEND engineHeadlessLibraries headlessStubs)
-LIST(APPEND engineHeadlessLibraries ${SPRING_SIM_LIBRARIES})
+#LIST(APPEND engineHeadlessLibraries ${SPRING_SIM_LIBRARIES})
 LIST(APPEND engineHeadlessLibraries engineSystemNet)
-LIST(APPEND engineHeadlessLibraries ${engineCommonLibraries})
+#LIST(APPEND engineHeadlessLibraries ${engineCommonLibraries})
 LIST(APPEND engineHeadlessLibraries engineaGui)
-LIST(APPEND engineHeadlessLibraries no-sound)
+#LIST(APPEND engineHeadlessLibraries no-sound)
 LIST(APPEND engineHeadlessLibraries engineSim)
 LIST(APPEND engineHeadlessLibraries pr-downloader_static)
+LIST(APPEND engineHeadlessLibraries 7zip lua luasocket assimp gflags)
+if (ENABLE_STREFLOP)
+LIST(APPEND otherLibraries ${IL_LIBRARIES} ${JPEG_LIBRARY} ${PNG_LIBRARY} ${TIFF_LIBRARY} ${GIF_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY_WITH_RT})
+LIST(APPEND engineHeadlessLibraries streflop)
+endif ()
+
+LIST(APPEND afterLibraries ${SPRING_MINIZIP_LIBRARY} ${ZLIB_LIBRARY} ${LIBUNWIND_LIBRARIES})
+
 
 INCLUDE_DIRECTORIES(${ENGINE_SRC_ROOT_DIR}/lib/assimp/include)
 INCLUDE_DIRECTORIES(${ENGINE_SRC_ROOT_DIR}/lib/asio/include)
@@ -48,8 +56,11 @@ INCLUDE_DIRECTORIES(${ENGINE_SRC_ROOT_DIR}/lib/slimsig/include)
 
 
 ### Build the executable
-ADD_EXECUTABLE(engine-headless ${engineSources} ${ENGINE_ICON})
-TARGET_LINK_LIBRARIES(engine-headless no-sound ${engineHeadlessLibraries} no-sound)
+#ADD_EXECUTABLE(engine-headless ${engineSources} ${ENGINE_ICON})
+ADD_LIBRARY(engine-headless SHARED ${engineSources})
+TARGET_LINK_LIBRARIES(engine-headless ${otherLibraries} -Wl,-whole-archive ${engineHeadlessLibraries} no-sound -Wl,-no-whole-archive ${afterLibraries})
+SET_TARGET_PROPERTIES(engine-headless PROPERTIES COMPILE_FLAGS "${PIC_FLAG}")
+SET_TARGET_PROPERTIES(engine-headless PROPERTIES LINK_FLAGS "-pie")
 
 IF    (MINGW)
 	# To enable console output/force a console window to open
@@ -58,7 +69,7 @@ ENDIF (MINGW)
 
 
 ### Install the executable
-INSTALL(TARGETS engine-headless DESTINATION ${BINDIR})
+INSTALL(TARGETS engine-headless DESTINATION ${LIBDIR})
 
 # Only build & install spring-headless executable & dependencies
 # use cases:
