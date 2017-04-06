@@ -13,103 +13,69 @@
 #include "UnitDef.h"
 #include "AIUtils.h"
 #include "Game.h"
+#include "Resource.h"
 
 #include <string>
 #include <iostream>
 
-recon::Recon::Recon(springai::OOAICallback* callback):
-callback(callback),
-skirmishAIId(callback != NULL ? callback->GetSkirmishAIId() : -1),
-numPlanes(0),
-reconUnitDef(0),
-hq(0),
-frame(0)
-{
-}
+recon::Recon::Recon(springai::OOAICallback* callback):AIBase(callback){}
 
-recon::Recon::~Recon() {}
-
-void recon::Recon::AddPlane(int unitId){
-	const std::vector<springai::Unit*> friendlyUnits = callback->GetFriendlyUnits();
-	springai::Unit* u(GetFriendlyUnitById(unitId));
-	if(u){
-		std::string name(u->GetDef()->GetName());
-		if(name.find("helicopter")!=std::string::npos){
-			u->SetFireState(utils::FIRESTATE_RETURNFIRE);
-			u2i[unitId]=numPlanes;
-			std::vector<springai::AIFloat3> wpts;
-			std::vector<float> raw(callback->GetUnitPaths(callback->GetGame()->GetMyTeam(),unitId));
-			for(int i(0); i<raw.size(); i+=3){
-				wpts.push_back(springai::AIFloat3(raw[i],raw[i+1],raw[i+2]));
-			}
-			waypoints.push_back(wpts);
-			ustat.push_back(0);
-
-			numPlanes++;
-			std::cout << "now have " << this->numPlanes << "planes\n";
-			std::cout << u << "\n";
-			u->MoveTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
-			std::cout << "MOVE TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
-
-		}
+void
+recon::Recon::weaponFiredEvent(SWeaponFiredEvent* evt) {
+	springai::WeaponDef* wpn(callback->GetWeaponDefs()[evt->weaponDefId]);
+	float intensity(wpn->GetIntensity());
+	std::cout << "IR event intensity: " << intensity << "\n";
+	if(u2i.find(evt->unitId)!=u2i.end()){
+		// My unit fired a weapon, lose points
+		AIBase::rscore -= 10;
 	}
 }
 
-
-springai::Unit* recon::Recon::GetEnemyUnitById(int id) const{
-	springai::Unit* ut(0);
-	GetUnitById(id,callback->GetEnemyUnits(),&ut);
-	return ut;
+void
+recon::Recon::enemyEnterRadarEvent(SEnemyEnterRadarEvent* evt){
+	AIBase::rscore+=.001; // Some points for detecting an entity
 }
-springai::Unit* recon::Recon::GetFriendlyUnitById(int id) const{
-	springai::Unit* ut(0);
-	GetUnitById(id,callback->GetFriendlyUnits(),&ut);
-	return ut;
+
+void
+recon::Recon::enemyDamagedEvent(SEnemyDamagedEvent* evt){
+	springai::Unit* u(GetEnemyUnitById(evt->enemy));
+	springai::Resource* res;
+	u->GetDef()->GetCost(res);
+	AIBase::rscore+=res->GetOptimum()/2.0;
 }
-int recon::Recon::HandleEvent(int topic, const void* data) {
 
-	switch (topic) {
-	case EVENT_UNIT_CREATED: {
-		struct SUnitCreatedEvent* evt = (struct SUnitCreatedEvent*) data;
-		int unitId = evt->unit;
+void
+recon::Recon::enemyDestroyedEvent(SEnemyDestroyedEvent* evt){
+	springai::Unit* u(GetEnemyUnitById(evt->enemy));
+	springai::Resource* res;
+	u->GetDef()->GetCost(res);
+	AIBase::rscore+=res->GetOptimum()*10.0;
+}
 
-		AddPlane(unitId);
 
-		break;
+void
+recon::Recon::unitDamagedEvent(SUnitDamagedEvent* evt){
+	springai::Unit* u(GetFriendlyUnitById(evt->unit));
+	springai::Resource* res;
+	u->GetDef()->GetCost(res);
+	AIBase::rscore-=res->GetOptimum()/2.0;
+}
+
+void
+recon::Recon::unitDestroyedEvent(SUnitDestroyedEvent* evt){
+	springai::Unit* u(GetFriendlyUnitById(evt->unit));
+	springai::Resource* res;
+	u->GetDef()->GetCost(res);
+	AIBase::rscore-=res->GetOptimum()*10.0;
+}
+
+void
+recon::Recon::defaultEvent(){
+	if(frame%100==0 && !AIBase::rdone && done.size() && allDone()){
+		AIBase::rdone=true;
+		std::cout << "Recon score: " << AIBase::rscore << "\n";
+		std::cout << "Recon score: " << AIBase::rscore << "\n";
+		callback->GetGame()->SendTextMessage("/AIKill 0",0);
+		callback->GetGame()->SendTextMessage("/AIKill 1",0);
 	}
-	case EVENT_COMMAND_FINISHED: {
-		struct SCommandFinishedEvent* evt = (struct SCommandFinishedEvent*) data;
-		int unitId = evt->unitId;
-		springai::Unit* u(GetFriendlyUnitById(unitId));
-		std::cout << "Command finished by " << u << "\n";
-		if(ustat[u2i[unitId]]>waypoints[u2i[unitId]].size()-1){
-			// No more commands... do nothing
-		}else if(ustat[u2i[unitId]]>waypoints[u2i[unitId]].size()-2){
-			std::cout << "patrol\n";
-			// Last command... patrol between points
-			u->PatrolTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
-			std::cout << "PATROL TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
-		}else{
-			std::cout << "move\n";
-			u->MoveTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
-			std::cout << "MOVE TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
-		}
-		break;
-	}
-	default: {
-		if(frame++ % 100){
-			//TODO output location of enemy missiles
-			//std::cout << "ENEMY COUNT" << callback->Get->GetEnemyUnits().size() << "\n";
-			friends=callback->GetFriendlyUnits();
-			for(auto const f: friends){
-				std::cout << *f << ": " << f->GetPos() << " @ " << frame << "\n";
-			}
-		}
-		break;
-	}
-
-	}
-
-	// signal: everything went OK
-	return 0;
 }

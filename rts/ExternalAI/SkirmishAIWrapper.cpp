@@ -377,7 +377,6 @@ void CSkirmishAIWrapper::EnemyLeaveLOS(int unitId) {
 }
 
 void CSkirmishAIWrapper::EnemyEnterRadar(int unitId) {
-  std::cout << "*** Entered radar " << unitId << "\n";
 	const SEnemyEnterRadarEvent evtData = {unitId};
 	HandleEvent(EVENT_ENEMY_ENTER_RADAR, &evtData);
 }

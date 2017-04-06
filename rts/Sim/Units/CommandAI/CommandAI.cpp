@@ -31,6 +31,7 @@
 #include "System/creg/STL_Set.h"
 #include "System/creg/STL_Deque.h"
 #include <assert.h>
+#include <iostream>
 
 // number of SlowUpdate calls that a target (unit) must
 // be out of radar (and hence LOS) contact before it is
@@ -922,6 +923,7 @@ void CCommandAI::GiveAllowedCommand(const Command& c, bool fromSynced)
 					commandQue.push_back(c);
 				}
 			}
+                        else{std::cout << "Not allowed to self destruct!\n";}
 			return;
 		}
 		case CMD_SET_WANTED_MAX_SPEED: {

@@ -52,6 +52,7 @@ if    (BUILD_${myName}_AIWRAPPER)
 	MakeGlobal(${myName}_AIWRAPPER_INCLUDE_DIRS)
 
 	set(mySources
+		"${mySourceDir}/AIBase.cpp"
 		"${mySourceDir}/AIEvent.cpp"
 		"${mySourceDir}/AIFloat3.cpp"
 		"${CMAKE_SOURCE_DIR}/rts/System/float3.cpp"

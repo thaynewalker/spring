@@ -720,7 +720,7 @@ private:
 class AIControlActionExecutor : public IUnsyncedActionExecutor {
 public:
 	AIControlActionExecutor() : IUnsyncedActionExecutor("AIControl",
-			"Creates a new instance of a Skirmish AI, to let it controll"
+			"Creates a new instance of a Skirmish AI, to let it control"
 			" a specific team") {}
 
 	bool Execute(const UnsyncedAction& action) const {
