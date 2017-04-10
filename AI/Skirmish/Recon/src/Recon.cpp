@@ -74,7 +74,7 @@ recon::Recon::defaultEvent(){
 	if(frame%100==0 && !AIBase::rdone && done.size() && allDone()){
 		AIBase::rdone=true;
 		std::cout << "Recon score: " << AIBase::rscore << "\n";
-		std::cout << "Recon score: " << AIBase::rscore << "\n";
+		std::cout << "Incumbent score: " << AIBase::iscore << "\n";
 		callback->GetGame()->SendTextMessage("/AIKill 0",0);
 		callback->GetGame()->SendTextMessage("/AIKill 1",0);
 	}
