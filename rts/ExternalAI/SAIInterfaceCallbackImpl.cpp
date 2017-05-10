@@ -134,6 +134,46 @@ EXPORT(int) aiInterfaceCallback_SkirmishAIs_getSize(int UNUSED_interfaceId) {
 	return skirmishAIHandler.GetNumSkirmishAIs();
 }
 
+EXPORT(int) aiInterfaceCallback_SkirmishAIs_getScore(int id) {
+	return skirmishAIHandler.GetSkirmishAI(id)->score;
+}
+
+EXPORT(void) aiInterfaceCallback_SkirmishAIs_setTheScore(int id, int score) {
+	skirmishAIHandler.GetSkirmishAI(id)->score=score;
+}
+
+EXPORT(const char*) aiInterfaceCallback_SkirmishAIs_getObservationAsString(int id, int index){
+  return skirmishAIHandler.GetSkirmishAI(id)->observations[index].stringRep().c_str();
+}
+
+EXPORT(void) aiInterfaceCallback_SkirmishAIs_setObservation(int id, int index, float mnx, float mxx, float mnz, float mxz, const char* const exp, const char* const name) {
+        SkirmishAIData* sai(skirmishAIHandler.GetSkirmishAI(id));
+        if(sai->observations.size()<index+1)
+          sai->observations.resize(index+1);
+        
+	sai->observations[index].minX=mnx;
+	sai->observations[index].maxX=mxx;
+	sai->observations[index].minZ=mnz;
+	sai->observations[index].maxZ=mxz;
+        for(int i(0); i<360; ++i){
+         sai->observations[index].exposure[i]=(exp[i]=='1');
+        }
+        sai->observations[index].id=name;
+}
+
+EXPORT(void) aiInterfaceCallback_SkirmishAIs_addObservation(int id, int index, float x, float z, int angle, const char* const name) {
+        SkirmishAIData* sai(skirmishAIHandler.GetSkirmishAI(id));
+        if(sai->observations.size()<index+1)
+          sai->observations.resize(index+1);
+        
+	sai->observations[index].minX=std::min(x,sai->observations[index].minX);
+	sai->observations[index].maxX=std::max(x,sai->observations[index].maxX);
+	sai->observations[index].minZ=std::min(z,sai->observations[index].minZ);
+	sai->observations[index].maxZ=std::max(z,sai->observations[index].maxZ);
+        sai->observations[index].exposure[angle]=true;
+        sai->observations[index].id=name;
+}
+
 EXPORT(int) aiInterfaceCallback_SkirmishAIs_getMax(int UNUSED_interfaceId) {
 	// TODO: should rather be something like (maxPlayers - numPlayers)
 	return MAX_TEAMS;
@@ -357,6 +397,11 @@ static void aiInterfaceCallback_init(struct SAIInterfaceCallback* callback) {
 	callback->AIInterface_Info_getDescription = &aiInterfaceCallback_AIInterface_Info_getDescription;
 	callback->AIInterface_Info_getValueByKey = &aiInterfaceCallback_AIInterface_Info_getValueByKey;
 	callback->Teams_getSize = &aiInterfaceCallback_Teams_getSize;
+	callback->SkirmishAIs_getScore = &aiInterfaceCallback_SkirmishAIs_getScore;
+	callback->SkirmishAIs_setTheScore = &aiInterfaceCallback_SkirmishAIs_setTheScore;
+	callback->SkirmishAIs_getObservationAsString = &aiInterfaceCallback_SkirmishAIs_getObservationAsString;
+	callback->SkirmishAIs_setObservation = &aiInterfaceCallback_SkirmishAIs_setObservation;
+	callback->SkirmishAIs_addObservation = &aiInterfaceCallback_SkirmishAIs_addObservation;
 	callback->SkirmishAIs_getSize = &aiInterfaceCallback_SkirmishAIs_getSize;
 	callback->SkirmishAIs_getMax = &aiInterfaceCallback_SkirmishAIs_getMax;
 	callback->SkirmishAIs_Info_getValueByKey = &aiInterfaceCallback_SkirmishAIs_Info_getValueByKey;

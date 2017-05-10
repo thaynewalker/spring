@@ -1260,6 +1260,26 @@ EXPORT(int) skirmishAiCallback_Teams_getSize(int skirmishAIId) {
 	return teamHandler->ActiveTeams();
 }
 
+EXPORT(int) skirmishAiCallback_SkirmishAIs_getScore(int skirmishAIId, int realId) {
+	return aiInterfaceCallback_SkirmishAIs_getScore(realId);
+}
+
+EXPORT(void) skirmishAiCallback_SkirmishAIs_setTheScore(int skirmishAIId, int score) {
+	aiInterfaceCallback_SkirmishAIs_setTheScore(skirmishAIId,score);
+}
+
+EXPORT(const char*) skirmishAiCallback_SkirmishAIs_getObservationAsString(int skirmishAIId, int index){
+  return aiInterfaceCallback_SkirmishAIs_getObservationAsString(skirmishAIId,index);
+}
+
+EXPORT(void) skirmishAiCallback_SkirmishAIs_setObservation(int skirmishAIId, int index, float mnx, float mxx, float mnz, float mxz, const char* const exp, const char* const name){
+  aiInterfaceCallback_SkirmishAIs_setObservation(skirmishAIId, index, mnx, mxx, mnz, mxz, exp, name);
+}
+
+EXPORT(void) skirmishAiCallback_SkirmishAIs_addObservation(int skirmishAIId, int index, float x, float z, int angle, const char* const name) {
+  aiInterfaceCallback_SkirmishAIs_addObservation(skirmishAIId, index, x, z, angle, name);
+}
+
 EXPORT(int) skirmishAiCallback_SkirmishAIs_getSize(int skirmishAIId) {
 	return aiInterfaceCallback_SkirmishAIs_getSize(-1);
 }
@@ -4201,6 +4221,24 @@ EXPORT(int) skirmishAiCallback_getAllyTeams(int skirmishAIId, int* teamIds, int 
 }
 
 
+EXPORT(const char*) skirmishAiCallback_Team_getUnitName(int skirmishAIId, int teamId, int unitId, const char* defaultName) {
+	const CTeam* team = getTeam(teamId);
+
+	if (team == nullptr)
+		return defaultName;
+
+	return team->GetUnitName(unitId).c_str();
+}
+
+EXPORT(const char*) skirmishAiCallback_Team_getAssumptions(int skirmishAIId, int teamId){
+	const CTeam* team = getTeam(teamId);
+
+	if (team == nullptr)
+          return nullptr;
+
+       return team->GetAssumptions().c_str();
+}
+
 EXPORT(int) skirmishAiCallback_Team_getUnitPaths(int skirmishAIId, int teamId, int unitId, float* paths, int pointsMaxSize) {
 	const CTeam* team = getTeam(teamId);
 
@@ -5289,8 +5327,13 @@ static void skirmishAiCallback_init(SSkirmishAICallback* callback) {
 	callback->Engine_Version_getSync = &skirmishAiCallback_Engine_Version_getSync;
 	callback->Engine_Version_getFull = &skirmishAiCallback_Engine_Version_getFull;
 	callback->Teams_getSize = &skirmishAiCallback_Teams_getSize;
+	callback->SkirmishAIs_getScore = &skirmishAiCallback_SkirmishAIs_getScore;
+	callback->SkirmishAIs_setTheScore = &skirmishAiCallback_SkirmishAIs_setTheScore;
 	callback->SkirmishAIs_getSize = &skirmishAiCallback_SkirmishAIs_getSize;
 	callback->SkirmishAIs_getMax = &skirmishAiCallback_SkirmishAIs_getMax;
+	callback->SkirmishAIs_getObservationAsString = &skirmishAiCallback_SkirmishAIs_getObservationAsString;
+	callback->SkirmishAIs_setObservation = &skirmishAiCallback_SkirmishAIs_setObservation;
+	callback->SkirmishAIs_addObservation = &skirmishAiCallback_SkirmishAIs_addObservation;
 	callback->SkirmishAI_getTeamId = &skirmishAiCallback_SkirmishAI_getTeamId;
 	callback->SkirmishAI_Info_getSize = &skirmishAiCallback_SkirmishAI_Info_getSize;
 	callback->SkirmishAI_Info_getKey = &skirmishAiCallback_SkirmishAI_Info_getKey;
@@ -5651,6 +5694,8 @@ static void skirmishAiCallback_init(SSkirmishAICallback* callback) {
 	callback->Team_hasAIController = &skirmishAiCallback_Team_hasAIController;
 	callback->getEnemyTeams = &skirmishAiCallback_getEnemyTeams;
 	callback->getAllyTeams = &skirmishAiCallback_getAllyTeams;
+	callback->getUnitName = &skirmishAiCallback_Team_getUnitName;
+	callback->getAssumptions = &skirmishAiCallback_Team_getAssumptions;
 	callback->getUnitPaths = &skirmishAiCallback_Team_getUnitPaths;
 	callback->Team_getRulesParamFloat = &skirmishAiCallback_Team_getRulesParamFloat;
 	callback->Team_getRulesParamString = &skirmishAiCallback_Team_getRulesParamString;

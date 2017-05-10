@@ -116,6 +116,21 @@ struct SSkirmishAICallback {
 	/** Returns the number of teams in this game */
 	int               (CALLING_CONV *Teams_getSize)(int skirmishAIId);
 
+	/** Returns the AI score */
+	int               (CALLING_CONV *SkirmishAIs_getScore)(int skirmishAIId, int realId);
+
+	/** Sets the AI score */
+	void              (CALLING_CONV *SkirmishAIs_setTheScore)(int skirmishAIId, int score);
+
+        /** Returns the observation as a string **/
+        const char*       (CALLING_CONV *SkirmishAIs_getObservationAsString)(int skirmishAIId, int index);
+
+        /** Initializes an observation **/
+        void              (CALLING_CONV *SkirmishAIs_setObservation)(int skirmishAIId, int index, float mnx, float mxx, float mnz, float mxz, const char* const exp, const char* const name);
+
+        /** Updates an observation **/
+        void              (CALLING_CONV *SkirmishAIs_addObservation)(int skirmishAIId, int index, float x, float z, int angle, const char* const name);
+
 	/** Returns the number of skirmish AIs in this game */
 	int               (CALLING_CONV *SkirmishAIs_getSize)(int skirmishAIId);
 
@@ -1365,6 +1380,8 @@ struct SSkirmishAICallback {
 
 	int               (CALLING_CONV *getAllyTeams)(int skirmishAIId, int* teamIds, int teamIds_sizeMax); //$ FETCHER:MULTI:IDs:Team:teamIds
 
+	const char*       (CALLING_CONV *getUnitName)(int skirmishAIId, int teamId, int unitId, const char* defaultName);
+	const char*       (CALLING_CONV *getAssumptions)(int skirmishAIId, int teamId);
 	int               (CALLING_CONV *getUnitPaths)(int skirmishAIId, int teamId, int unitId, float* paths, int paths_sizeMax); //$ ARRAY:paths
 
 	/**

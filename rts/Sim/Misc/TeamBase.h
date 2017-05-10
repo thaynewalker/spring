@@ -22,6 +22,7 @@ public:
 	virtual ~TeamBase() {}
 
 	virtual std::vector<float3> const& GetUnitPlans(int unitId) const;
+	virtual std::string const& GetUnitName(int unitId) const;
 	void CreateUnits();
 	virtual signed GetUnitIndex(int unitId)const{return 0;}
 
@@ -77,6 +78,7 @@ public:
 	/// @see incomeMultiplier
 	float GetIncomeMultiplier() const { return incomeMultiplier; }
 
+	std::string const& GetAssumptions() const;
 
 	/**
 	 * Player ID of the player in charge of this team.
@@ -100,6 +102,7 @@ protected:
 	// Startup units and their plans
 	std::vector<std::vector<float3> > unitplans;
 	std::vector<std::string> names;
+	std::string assumptions;
 	/**
 	 * All the teams resource income is multiplied by this factor.
 	 * The default value is 1.0f, the valid range is [0.0, FLOAT_MAX].

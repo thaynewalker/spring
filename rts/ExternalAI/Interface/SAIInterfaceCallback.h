@@ -136,6 +136,20 @@ struct SAIInterfaceCallback {
 
 	/// the number of skirmish AIs in this game
 	int               (CALLING_CONV *SkirmishAIs_getSize)(int interfaceId);
+     
+	/// current score of the AI
+	int               (CALLING_CONV *SkirmishAIs_getScore)(int id);
+	void              (CALLING_CONV *SkirmishAIs_setTheScore)(int id, int score);
+
+        /** Returns the observation as a string **/
+        const char*       (CALLING_CONV *SkirmishAIs_getObservationAsString)(int skirmishAIId, int index);
+
+        /** Initializes an observation **/
+        void              (CALLING_CONV *SkirmishAIs_setObservation)(int skirmishAIId, int index, float mnx, float mxx, float mnz, float mxz, const char* const exp, const char* const name);
+
+        /** Updates an observation **/
+        void              (CALLING_CONV *SkirmishAIs_addObservation)(int skirmishAIId, int index, float x, float z, int angle, const char* const name);
+
 
 	/// the maximum number of skirmish AIs in any game
 	int               (CALLING_CONV *SkirmishAIs_getMax)(int interfaceId);

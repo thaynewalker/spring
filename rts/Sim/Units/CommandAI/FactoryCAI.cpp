@@ -169,6 +169,11 @@ void CFactoryCAI::GiveCommandReal(const Command& c, bool fromSynced)
 			return;
 		}
 
+		if (cmdID == CMD_RADAR_ON) {
+			CCommandAI::GiveAllowedCommand(c);
+			return;
+		}
+
 		if (!(c.options & SHIFT_KEY) && (cmdID == CMD_WAIT || cmdID == CMD_SELFD)) {
 			CCommandAI::GiveAllowedCommand(c);
 			return;

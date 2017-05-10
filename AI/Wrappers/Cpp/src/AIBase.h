@@ -12,53 +12,63 @@
 
 #include "WeaponDef.h"
 #include "Game.h"
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <iostream>
 
 class AIBase {
 
+public:
+
+	template<typename Out>
+	void split(const std::string &s, char delim, Out result);
+	std::vector<std::string> split(const std::string &s, char delim);
 protected:
 	springai::OOAICallback* callback;
 	int skirmishAIId;
     int numUnits;
+    int numEnemies;
     std::string prefix;
     springai::Unit* hq;
     void AddUnit(int unitId);
     springai::Unit* GetFriendlyUnitById(int id) const;
     springai::Unit* GetEnemyUnitById(int id) const;
     std::vector<std::vector<springai::AIFloat3> > waypoints;
-    std::map<int,int> u2i;
+    std::vector<std::string> status;
+    std::vector<std::string> name;
+    std::unordered_map<int,int> u2i;
+	std::unordered_map<int,int> eu2i;
     std::vector<int> ustat;
     std::vector<bool> done;
 	std::vector<springai::Unit*> friends;
 	int frame;
-	double myPoints;
+	bool alldone;
+	int  score;
+	bool deathOccurred;
 
-	// Very implementation dependent -
-	static double iscore;
-	static double rscore;
-	static bool idone;
-	static bool rdone;
-
+	int GetIntOption(char const* const val, int dflt=0);
+	std::string GetStringOption(char const* const val);
 	virtual bool allDone()const{
-		bool d(true);
-		int i(0);
-		for(auto const& ad: done){d&=ad;if(!ad){std::cout << "a "<<i++<<"not done\n";}}
-		return d;
+		for(auto const& ad: done){if(!ad)return false;}
+		return true;
 	}
 	virtual void unitCreatedEvent(SUnitCreatedEvent* evt);
 	virtual void commandFinishedEvent(SCommandFinishedEvent* evt);
-	virtual void weaponFiredEvent(SWeaponFiredEvent* evt){}
+	virtual void weaponFiredEvent(SWeaponFiredEvent* evt);
 	virtual void enemyLeaveLOSEvent(SEnemyLeaveLOSEvent* evt){}
 	virtual void enemyEnterLOSEvent(SEnemyEnterLOSEvent* evt){}
-	virtual void enemyLeaveRadarEvent(SEnemyLeaveRadarEvent* evt){}
-	virtual void enemyEnterRadarEvent(SEnemyEnterRadarEvent* evt){}
-	virtual void enemyDestroyedEvent(SEnemyDestroyedEvent* evt){}
-	virtual void enemyDamagedEvent(SEnemyDamagedEvent* evt){}
-	virtual void unitDamagedEvent(SUnitDamagedEvent* evt){}
-	virtual void unitDestroyedEvent(SUnitDestroyedEvent* evt){}
-	virtual void defaultEvent(){}
+	virtual void enemyLeaveRadarEvent(SEnemyLeaveRadarEvent* evt);
+	virtual void enemyEnterRadarEvent(SEnemyEnterRadarEvent* evt);
+	virtual void enemyDestroyedEvent(SEnemyDestroyedEvent* evt);
+	virtual void enemyDamagedEvent(SEnemyDamagedEvent* evt);
+	virtual void unitDamagedEvent(SUnitDamagedEvent* evt);
+	virtual void unitDestroyedEvent(SUnitDestroyedEvent* evt);
+	virtual int defaultEvent(){
+		if(deathOccurred){
+			friends=callback->GetFriendlyUnits();
+			deathOccurred=false;
+		}
+	}
 public:
 	AIBase(springai::OOAICallback* callback);
 

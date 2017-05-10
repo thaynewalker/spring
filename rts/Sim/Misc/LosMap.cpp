@@ -13,6 +13,8 @@
 #endif
 #include <algorithm>
 #include <array>
+#include <iostream>
+#include <map>
 
 constexpr float LOS_BONUS_HEIGHT = 5.0f;
 
@@ -480,14 +482,14 @@ void CLosMap::LosAdd(SLosInstance* li) const
 		return;
 
 	// add all squares that are in the los radius
-	SRectangle safeRect(li->radius, li->radius, size.x - li->radius, size.y - li->radius);
-	if (safeRect.Inside(li->basePos)) {
+	//SRectangle safeRect(li->radius, li->radius, size.x - li->radius, size.y - li->radius);
+	//if (safeRect.Inside(li->basePos)) {
 		// we aren't touching the map borders -> we don't need to check for the map boundaries
-		UnsafeLosAdd(li);
-	} else {
+		//UnsafeLosAdd(li);
+	//} else {
 		// we need to check each square if it's outside of the map boundaries
 		SafeLosAdd(li);
-	}
+	//}
 }
 
 
@@ -531,15 +533,56 @@ void CLosMap::AddSquaresToInstance(SLosInstance* li, const std::vector<char>& sq
 			if (*(ptr++)) {
 				++rle.length;
 			} else {
-				if (rle.length > 0) li->squares.push_back(rle);
+				if (rle.start>=0 && rle.length > 0){li->squares.push_back(rle);
+                                  //std::cout << "RLE: " << rle.start << "," << rle.length << std::endl;
+                                }
 				rle.start  += rle.length + 1;
 				rle.length = 0;
 			}
 		}
-		if (rle.length > 0) li->squares.push_back(rle);
+		if (rle.start>=0 && rle.length > 0){li->squares.push_back(rle);
+                  //std::cout << "RLE: " << rle.start << "," << rle.length << std::endl;
+                }
 	}
 }
 
+void drawcircle(int x0, int y0, int r, std::map<int,int>& coords)
+{
+    int x = r;
+    int y = 0;
+    int err = 0;
+
+    while (x >= y)
+    {
+        // Full right side of circle, with coords swapped (y first so we sort on y primarily)
+        auto r(coords.emplace(y0 + y, x0 + x));
+        if(!r.second && r.first->second < x0+x){
+          r.first->second=x0+x;
+        }
+
+        r=coords.emplace(y0 + x, x0 + y);
+        if(!r.second && r.first->second < x0+y){
+          r.first->second=x0+y;
+        }
+        r=coords.emplace(y0 - x, x0 + y);
+        if(!r.second && r.first->second < x0+y){
+          r.first->second=x0+y;
+        }
+        r=coords.emplace(y0 - y, x0 + x);
+        if(!r.second && r.first->second < x0+x){
+          r.first->second=x0+y;
+        }
+
+        y++;
+        if(err <= 0){
+            err += 2*y + 1;
+        }
+        else{
+            x--;
+            err -= 2*x + 1;
+        }
+    }
+}
 
 void CLosMap::UnsafeLosAdd(SLosInstance* li) const
 {
@@ -629,16 +672,53 @@ void CLosMap::SafeLosAdd(SLosInstance* li) const
 {
 	// How does it work?
 	// see above
+       
+        int ops(0);
+	const int radius = li->radius;
+	const int2 pos   = li->basePos;
+	int d(2*radius+1);
+	std::vector<char> squaresMap(Square(d), false); // saves the list of visible squares
+	std::map<int,int> coords1;
+	drawcircle(pos.y,pos.x,radius,coords1);
+        //std::cout << "p: " << pos.x << "," << pos.y << " r: " << radius << " size: " << size.x << "," << size.y << std::endl;
+        for(auto const& c:coords1){
+          if(c.first < 0 || c.first >= size.y) continue;
+          int x(std::max(0,c.second-d));
+          int len(std::min(size.x,c.second-x));
+          if(len<1) continue;
+          //std::cout << "coord: " << c.first << "," << c.second << std::endl;
+          //std::cout << "new: " <<x+c.first*size.x << "," << len << std::endl;
+          li->squares.push_back({x+c.first*size.x,len});
+        }
+        return;
+	std::map<int,int> coords;
+	drawcircle(radius,radius,radius,coords);
+        for(auto const& c:coords){
+          ops++;
+          if(pos.y-radius+c.first<0 || pos.y-radius+c.first>size.y-1) continue; // Off the map
+
+          int x(d-c.second);
+          int len((c.second-radius)*2);
+          int offset(pos.x-radius+x);
+          //std::cout << "px " << pos.x << " r " << radius << " d " << d << " xc " << c.second << " x " << x << " len " << len << " yc " << c.first << " offset " << offset << " size " << size.x << "," << size.y << std::endl;
+          if(offset < 0){x-=offset; len+=offset;}
+          if(len > size.x){len=size.x;}
+          if(len<1)continue;
+
+          
+          memset(&squaresMap[x+c.first*d],0x01,len);
+          //std::cout << "px " << pos.x << " r " << radius << " d " << d << " xc " << c.second << " x " << x << " len " << len << " yc " << c.first << " offset " << offset << " size " << size.x << "," << size.y << std::endl;
+
+          //std::cout << "real coords: " << (pos.x-radius+x) << ","<<(pos.y-radius+c.first) << " thru " << (pos.x-radius+x)+ len << "," << (pos.y-radius+c.first) << " inside? " << size.x << "," << size.y << std::endl;
+        }
+        /*
 	const int threadNum = ThreadPool::GetThreadNum();
 
-	const int2 pos   = li->basePos;
-	const int radius = li->radius;
 	const float losHeight = li->baseHeight;
 
 	CLosTableHelper& helper = losTableHelpers[threadNum];
 	helper.GenerateForLosSize(radius);
 
-	std::vector<char> squaresMap(Square((2 * radius) + 1), false); // saves the list of visible squares
 	std::vector<float> anglesMap(Square((2 * radius) + 1), -1e8);
 
 	const SRectangle safeRect(0, 0, size.x, size.y);
@@ -657,6 +737,7 @@ void CLosMap::SafeLosAdd(SLosInstance* li) const
 			char* squaresPtr = &squaresMap[oidx];
 			int idx = MAP_SQUARE(int2(sx, y_));
 			for (unsigned x_ = sx; x_ < ex; ++x_) {
+                        ops++;
 				const int2 off(x_ - pos.x, y);
 
 				if (off == int2(0,0)) {
@@ -689,6 +770,7 @@ void CLosMap::SafeLosAdd(SLosInstance* li) const
 			const size_t numSquares = helper.GetLosTableRaySize(radius, i);
 
 			for (size_t n = 0; n < numSquares; n++) {
+                                ops++;
 				const int2 square = helper.GetLosTableRaySquare(radius, i, n);
 
 				if (!safeRect.Inside(pos + square))
@@ -697,6 +779,7 @@ void CLosMap::SafeLosAdd(SLosInstance* li) const
 				CastLos(&prevAng[0], &maxAng[0], square,                    squaresMap, anglesMap, radius, threadNum);
 			}
 			for (size_t n = 0; n < numSquares; n++) {
+                                ops++;
 				const int2 square = helper.GetLosTableRaySquare(radius, i, n);
 
 				if (!safeRect.Inside(pos - square))
@@ -705,6 +788,7 @@ void CLosMap::SafeLosAdd(SLosInstance* li) const
 				CastLos(&prevAng[1], &maxAng[1], -square,                   squaresMap, anglesMap, radius, threadNum);
 			}
 			for (size_t n = 0; n < numSquares; n++) {
+                                ops++;
 				const int2 square = helper.GetLosTableRaySquare(radius, i, n);
 
 				if (!safeRect.Inside(pos + int2(square.y, -square.x)))
@@ -713,6 +797,7 @@ void CLosMap::SafeLosAdd(SLosInstance* li) const
 				CastLos(&prevAng[2], &maxAng[2], int2(square.y, -square.x), squaresMap, anglesMap, radius, threadNum);
 			}
 			for (size_t n = 0; n < numSquares; n++) {
+                                ops++;
 				const int2 square = helper.GetLosTableRaySquare(radius, i, n);
 
 				if (!safeRect.Inside(pos + int2(-square.y, square.x)))
@@ -730,6 +815,7 @@ void CLosMap::SafeLosAdd(SLosInstance* li) const
 			const size_t numSquares = helper.GetLosTableRaySize(radius, i);
 
 			for (size_t n = 0; n < numSquares; n++) {
+                                ops++;
 				const int2 square = helper.GetLosTableRaySquare(radius, i, n);
 
 				if (safeRect.Inside(pos + square)) {
@@ -747,6 +833,8 @@ void CLosMap::SafeLosAdd(SLosInstance* li) const
 			}
 		}
 	}
+        */
+        //std::cout << "Safe " << ops << " vs. " << squaresMap.size() << "\n";
 
 	// translate visible square indices to map square idx + RLE
 	AddSquaresToInstance(li, squaresMap);

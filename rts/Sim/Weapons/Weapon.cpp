@@ -29,6 +29,7 @@
 #include "System/Sound/ISoundChannels.h"
 #include "System/Log/ILog.h"
 #include "System/Util.h"
+//#include <iostream>
 
 CR_BIND_DERIVED(CWeapon, CObject, (nullptr, nullptr))
 
@@ -1190,10 +1191,19 @@ float3 CWeapon::GetUnitPositionWithError(const CUnit* unit) const
 	return errorPos + errorVector * errorScale;
 }
 
+static std::ostream& operator <<(std::ostream& ss, float3 const& vec){
+  ss<<vec.x<<","<<vec.y<<","<<vec.z;
+  return ss;
+}
 
 float3 CWeapon::GetUnitLeadTargetPos(const CUnit* unit) const
 {
-	const float3 tmpTargetPos = GetUnitPositionWithError(unit) + GetLeadVec(unit);
+//std::cout << "Target true position: " << unit->pos << "\n";
+	const float3 tmpTargetPos = GetUnitPositionWithError(unit) + GetLeadVec(unit)*5.0;
+//std::cout << "Target seen position: " << GetUnitPositionWithError(unit) << "\n";
+//std::cout << "Target true propagation: " << unit->speed*GetPredictedImpactTime(unit->pos) << "\n";
+//std::cout << "Target propagation: " << GetLeadVec(unit) << "\n";
+//std::cout << "Target expected position: " << tmpTargetPos << "\n";
 	const float3 tmpTargetDir = (tmpTargetPos - aimFromPos).SafeNormalize();
 
 	float3 aimPos = GetTargetBorderPos(unit, tmpTargetPos, tmpTargetDir);
@@ -1202,6 +1212,7 @@ float3 CWeapon::GetUnitLeadTargetPos(const CUnit* unit) const
 	// never target below water if not a water-weapon
 	aimPos.y = std::max(aimPos.y, CGround::GetApproximateHeight(aimPos.x, aimPos.z) + 2.0f);
 	aimPos.y = std::max(aimPos.y, aimPos.y * weaponDef->waterweapon);
+//std::cout << "Final target expected position: " << aimPos << "\n";
 
 	return aimPos;
 }

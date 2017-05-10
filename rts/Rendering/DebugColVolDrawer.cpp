@@ -14,8 +14,10 @@
 #include "Sim/Misc/CollisionVolume.h"
 #include "Sim/Misc/QuadField.h"
 #include "Sim/Units/Unit.h"
+#include "Sim/Units/UnitDef.h"
 #include "Sim/Weapons/PlasmaRepulser.h"
 #include "Sim/Weapons/Weapon.h"
+#include "Sim/Weapons/WeaponDef.h"
 #include "System/UnorderedSet.hpp"
 
 static const float4 DEFAULT_VOLUME_COLOR = float4(0.45f, 0.0f, 0.45f, 0.35f);
@@ -203,6 +205,96 @@ static inline void DrawFeatureColVol(const CFeature* f)
 	glPopMatrix();
 }
 
+static inline void DrawUnitThreatDome(const CUnit* u)
+{
+	if (u->IsInVoid())
+		return;
+	if (!(u->losStatus[gu->myAllyTeam] & LOS_INLOS) && !gu->spectatingFullView)
+		return;
+	if (!camera->InView(u->drawMidPos, u->GetDrawRadius()))
+		return;
+	UnitDef* ud(((UnitDef*)u->GetDef()));
+	if (ud->weapons.empty())
+		return;
+
+	CollisionVolume cv(u->collisionVolume);
+	cv.SetVolumeType(CollisionVolume::COLVOL_TYPE_SPHERE);
+	float range(((UnitDef*)u->GetDef())->weapons[0].def->range*2.0);
+	cv.SetAxisScales(float3(range,range,range));
+	cv.SetBoundingRadius();
+
+	const CollisionVolume* v=&cv;
+
+	glPushMatrix();
+		glMultMatrixf(u->GetTransformMatrix(false));
+		DrawObjectMidAndAimPos(u);
+
+		if (v->DefaultToPieceTree()) {
+			// draw only the piece volumes for less clutter
+			// note: relMidPos transform is on the stack at this
+			// point but all piece-positions are relative to pos
+			// --> undo it
+			glTranslatef3(-u->relMidPos);
+			DrawObjectDebugPieces(u);
+			glTranslatef3(u->relMidPos);
+		} else {
+			if (!v->IgnoreHits()) {
+				// make it red
+				glColor3f(1.0f,0.0f,0.0f);
+
+				// if drawing this, disable the DrawObjectMidAndAimPos call
+				// DrawCollisionVolume((u->localModel).GetBoundingVolume());
+				DrawCollisionVolume(v);
+			}
+		}
+
+	glPopMatrix();
+}
+
+static inline void DrawUnitRadar(const CUnit* u)
+{
+	if (u->IsInVoid())
+		return;
+	if (!(u->losStatus[gu->myAllyTeam] & LOS_INLOS) && !gu->spectatingFullView)
+		return;
+	if (!camera->InView(u->drawMidPos, u->GetDrawRadius()))
+		return;
+	if (!u->radarOn || !u->radarRadius)
+		return;
+
+	CollisionVolume cv(u->collisionVolume);
+	cv.SetVolumeType(CollisionVolume::COLVOL_TYPE_SPHERE);
+	cv.SetAxisScales(float3(u->radarRadius*2.0,u->radarRadius*2.0,u->radarRadius*2.0));
+	cv.SetBoundingRadius();
+
+	const CollisionVolume* v=&cv;
+
+	glPushMatrix();
+		glMultMatrixf(u->GetTransformMatrix(false));
+		DrawObjectMidAndAimPos(u);
+
+		if (v->DefaultToPieceTree()) {
+			// draw only the piece volumes for less clutter
+			// note: relMidPos transform is on the stack at this
+			// point but all piece-positions are relative to pos
+			// --> undo it
+			glTranslatef3(-u->relMidPos);
+			DrawObjectDebugPieces(u);
+			glTranslatef3(u->relMidPos);
+		} else {
+			if (!v->IgnoreHits()) {
+				// make it yellow
+				glColor3f(1.0f,1.0f,0.0f);
+
+				// if drawing this, disable the DrawObjectMidAndAimPos call
+				// DrawCollisionVolume((u->localModel).GetBoundingVolume());
+				DrawCollisionVolume(v);
+			}
+		}
+
+	glPopMatrix();
+}
+
 static inline void DrawUnitColVol(const CUnit* u)
 {
 	if (u->IsInVoid())
@@ -314,6 +406,8 @@ public:
 			if (alreadyDrawnIds.find(u->id) == alreadyDrawnIds.end()) {
 				alreadyDrawnIds.insert(u->id);
 				DrawUnitColVol(u);
+				DrawUnitRadar(u);
+				DrawUnitThreatDome(u);
 			}
 		}
 	}

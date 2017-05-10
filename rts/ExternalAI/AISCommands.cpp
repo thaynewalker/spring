@@ -312,6 +312,16 @@ int extractAICommandTopic(const Command* engineCmd, int maxUnits) {
 			aiCommandTopic = COMMAND_UNIT_FIGHT;
 			break;
 		}
+		case CMD_RADAR_OFF:
+		{
+			aiCommandTopic = COMMAND_UNIT_RADAR_OFF;
+			break;
+		}
+		case CMD_RADAR_ON:
+		{
+			aiCommandTopic = COMMAND_UNIT_RADAR_ON;
+			break;
+		}
 		case CMD_ATTACK:
 		{
 			if (engineCmd->params.size() < 3) {

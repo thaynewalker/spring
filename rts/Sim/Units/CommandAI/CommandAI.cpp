@@ -124,7 +124,7 @@ CCommandAI::CCommandAI(CUnit* owner):
 
 	if (HasRadar()) {
 		SCommandDescription c;
-		if(!owner->radarOn){
+		//if(!owner->radarOn){
 
 			c.id   = CMD_RADAR_ON;
 			c.type = CMDTYPE_ICON_UNIT_OR_MAP;
@@ -134,7 +134,7 @@ CCommandAI::CCommandAI(CUnit* owner):
 			c.tooltip   = c.name + ": Turns on radar";
 			c.mouseicon = c.name;
 			possibleCommands.push_back(commandDescriptionCache->GetPtr(c));
-		}else{
+		//}else{
 			c.id   = CMD_RADAR_OFF;
 			c.type = CMDTYPE_ICON_UNIT_OR_MAP;
 
@@ -143,7 +143,7 @@ CCommandAI::CCommandAI(CUnit* owner):
 			c.tooltip   = c.name + ": Turns off radar";
 			c.mouseicon = c.name;
 			possibleCommands.push_back(commandDescriptionCache->GetPtr(c));
-		}
+		//}
 	}
 
 	if (IsAttackCapable()) {
@@ -646,16 +646,15 @@ bool CCommandAI::AllowedCommand(const Command& c, bool fromSynced)
 				return false;
 			// fall through
 
-        case CMD_RADAR_ON:{
-        	if(HasRadar() && owner){
-        		owner->radarOn=true;
-        	}
-        }
-		case CMD_RADAR_OFF: {
-			if(HasRadar() && owner){
-				owner->radarOn=false;
-			}
-		}
+                case CMD_RADAR_ON:
+		case CMD_RADAR_OFF:
+                        if(!HasRadar()){
+                                return false;
+                        }
+                        else{
+                         return true;
+                        }
+                        break;
 		case CMD_ATTACK: {
 			if (!IsAttackCapable())
 				return false;
@@ -808,6 +807,18 @@ inline void CCommandAI::SetCommandDescParam0(const Command& c)
 bool CCommandAI::ExecuteStateCommand(const Command& c)
 {
 	switch (c.GetID()) {
+                case CMD_RADAR_ON:{
+                        owner->radarOn=true;
+			//SetCommandDescParam0(c);
+			//selectedUnitsHandler.PossibleCommandChange(owner);
+                        return true;
+                }
+		case CMD_RADAR_OFF: {
+			owner->radarOn=false;
+			//SetCommandDescParam0(c);
+			//selectedUnitsHandler.PossibleCommandChange(owner);
+                        return true;
+		}
 		case CMD_FIRE_STATE: {
 			owner->fireState = (int)c.params[0];
 			SetCommandDescParam0(c);

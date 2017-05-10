@@ -3,6 +3,7 @@
 #include "UnitDrawer.h"
 #include "UnitDrawerState.hpp"
 
+#include "Rendering/Fonts/glFont.h"
 #include "Game/Camera.h"
 #include "Game/CameraHandler.h"
 #include "Game/GameHelper.h"
@@ -391,6 +392,20 @@ void CUnitDrawer::Draw(bool drawReflection, bool drawRefraction)
 	glDisable(GL_FOG);
 	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_TEXTURE_2D);
+        
+	font->SetTextColor(0.0f, 0.0f, 0.0f, 1.0f);
+	for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_OTHER; modelType++) {
+		const auto& unitBin = opaqueModelRenderers[modelType]->GetUnitBin();
+
+		for (auto unitBinIt = unitBin.cbegin(); unitBinIt != unitBin.cend(); ++unitBinIt) {
+
+			for (CUnit* unit: unitBinIt->second) {
+				float3 p(unit->pos);
+				p.z -=35;
+				font->glWorldPrint(p, 50.0f, IntToString(unit->id, "%d"));
+			}
+		}
+	}
 }
 
 void CUnitDrawer::DrawOpaquePass(bool deferredPass, bool drawReflection, bool drawRefraction)
@@ -428,6 +443,7 @@ void CUnitDrawer::DrawOpaqueUnits(int modelType, bool drawReflection, bool drawR
 
 inline void CUnitDrawer::DrawOpaqueUnit(CUnit* unit, bool drawReflection, bool drawRefraction)
 {
+
 	if (!CanDrawOpaqueUnit(unit, drawReflection, drawRefraction))
 		return;
 
@@ -442,6 +458,8 @@ inline void CUnitDrawer::DrawOpaqueUnit(CUnit* unit, bool drawReflection, bool d
 	// draw the unit with the default (non-Lua) material
 	SetTeamColour(unit->team);
 	DrawUnitTrans(unit, 0, 0, false, false);
+
+
 }
 
 

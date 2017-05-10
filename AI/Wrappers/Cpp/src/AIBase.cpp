@@ -1,15 +1,31 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
 #include "AIBase.h"
+#include "SkirmishAI.h"
+#include "OptionValues.h"
+#include "SkirmishAIs.h"
 
 AIBase::AIBase(springai::OOAICallback* callback):
 callback(callback),
 skirmishAIId(callback != 0 ? callback->GetSkirmishAIId() : -1),
 numUnits(0),
+numEnemies(0),
 hq(0),
 frame(0),
-myPoints(0.0)
+alldone(false),
+score(0),
+deathOccurred(false)
 {
+	callback->GetSkirmishAIs()->SetTheScore(score);
+}
+
+int AIBase::GetIntOption(char const* const key, int dflt){
+	char const*const val(callback->GetSkirmishAI()->GetOptionValues()->GetValueByKey(key));
+	return val?atoi(val):dflt;
+}
+
+std::string AIBase::GetStringOption(char const* const key){
+	return callback->GetSkirmishAI()->GetOptionValues()->GetValueByKey(key);
 }
 
 void
@@ -21,13 +37,13 @@ void
 AIBase::commandFinishedEvent(SCommandFinishedEvent* evt){
 	int unitId = evt->unitId;
 	springai::Unit* u(GetFriendlyUnitById(unitId));
-	std::cout << "Command finished by " << u << "\n";
+	//std::cout << "Command finished by " << u << "\n";
 	if(ustat[u2i[unitId]]==waypoints[u2i[unitId]].size()-1){
 		done[u2i[unitId]]=true;
-		std::cout << "restart\n";
+		//std::cout << "restart\n";
 		ustat[u2i[unitId]]=0;
 		u->MoveTo(waypoints[u2i[unitId]][ustat[u2i[unitId]]],0);
-		std::cout << "MOVE TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
+		//std::cout << "MOVE TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
 		//std::cout << "Destruct " << *u << "\n";
 		//u->SelfDestruct(0,0);
 	/*}else if(ustat[u2i[unitId]]==waypoints[u2i[unitId]].size()-2){
@@ -36,14 +52,70 @@ AIBase::commandFinishedEvent(SCommandFinishedEvent* evt){
 		u->PatrolTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
 		std::cout << "PATROL TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
 	*/}else{
-		std::cout << "move\n";
+		//std::cout << "move\n";
 		u->MoveTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
-		std::cout << "MOVE TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
+		//std::cout << "MOVE TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
 	}
 }
 
+void
+AIBase::weaponFiredEvent(SWeaponFiredEvent* evt) {
+	springai::WeaponDef* wpn(callback->GetWeaponDefs()[evt->weaponDefId]);
+	float intensity(wpn->GetIntensity());
+	std::cout << "IR event intensity: " << intensity << "\n";
+	if(u2i.find(evt->unitId)!=u2i.end()){
+		// My unit fired a weapon, lose points
+		score -= 10;
+		callback->GetSkirmishAIs()->SetTheScore(score);
+	}
+}
+
+void
+AIBase::enemyEnterRadarEvent(SEnemyEnterRadarEvent* evt){
+	score+=1; // Some points for detecting an entity
+	callback->GetSkirmishAIs()->SetTheScore(score);
+	eu2i[evt->enemy]=numEnemies++;
+}
+
+void
+AIBase::enemyDamagedEvent(SEnemyDamagedEvent* evt){
+	springai::Unit* u(GetEnemyUnitById(evt->enemy));
+	score += u->GetDef()->GetCost(callback->GetResourceByName("Metal"))/10;
+	callback->GetSkirmishAIs()->SetTheScore(score);
+}
+
+void
+AIBase::enemyDestroyedEvent(SEnemyDestroyedEvent* evt){
+	springai::Unit* u(GetEnemyUnitById(evt->enemy));
+	score += u->GetDef()->GetCost(callback->GetResourceByName("Metal"));
+	callback->GetSkirmishAIs()->SetTheScore(score);
+}
+
+
+void
+AIBase::unitDamagedEvent(SUnitDamagedEvent* evt){
+	springai::Unit* u(GetFriendlyUnitById(evt->unit));
+	score -= u->GetDef()->GetCost(callback->GetResourceByName("Metal"))/10;
+	callback->GetSkirmishAIs()->SetTheScore(score);
+}
+
+void
+AIBase::unitDestroyedEvent(SUnitDestroyedEvent* evt){
+	springai::Unit* u(GetFriendlyUnitById(evt->unit));
+	score -= u->GetDef()->GetCost(callback->GetResourceByName("Metal"));
+	callback->GetSkirmishAIs()->SetTheScore(score);
+	done[u2i[evt->unit]]=true;
+	deathOccurred=true;
+}
+
+void
+AIBase::enemyLeaveRadarEvent(SEnemyLeaveRadarEvent* evt){
+	// Wait for a small amount of time, then turn off Radar
+}
+
+
 void AIBase::AddUnit(int unitId){
-	const std::vector<springai::Unit*> friendlyUnits = callback->GetFriendlyUnits();
+	friends=callback->GetFriendlyUnits();
 	springai::Unit* u(GetFriendlyUnitById(unitId));
 	if(u){
 		std::string name(u->GetDef()->GetName());
@@ -57,12 +129,12 @@ void AIBase::AddUnit(int unitId){
 		}
 		waypoints.push_back(wpts);
 
+		std::cout << u << "\n";
 		if(wpts.size()>1){
 			done.push_back(false);
 			std::cout << "now have " << this->numUnits << " mobile units\n";
-			std::cout << u << "\n";
 			u->MoveTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
-			std::cout << "MOVE TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
+			//std::cout << "MOVE TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
 
 		}else{
 			done.push_back(true);
@@ -79,11 +151,12 @@ springai::Unit* AIBase::GetEnemyUnitById(int id) const{
 
 springai::Unit* AIBase::GetFriendlyUnitById(int id) const{
 	springai::Unit* ut(0);
-	GetUnitById(id,callback->GetFriendlyUnits(),&ut);
+	GetUnitById(id,friends,&ut);
 	return ut;
 }
 
 int AIBase::HandleEvent(int topic, const void* data) {
+	int retval(0);
 	switch (topic) {
 	case EVENT_UNIT_CREATED: {
 		unitCreatedEvent((SUnitCreatedEvent*) data);
@@ -130,16 +203,44 @@ int AIBase::HandleEvent(int topic, const void* data) {
 			break;
 		}
 		default: {
-			defaultEvent();
+			retval = defaultEvent();
 			break;
 		}
 	}
 
 	// signal: everything went OK
-	return 0;
+	return retval;
 }
 
-double AIBase::iscore=0.0;
-double AIBase::rscore=0.0;
-bool AIBase::idone=false;
-bool AIBase::rdone=false;
+template<typename Out>
+void AIBase::split(const std::string &s, char delim, Out result) {
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        *(result++) = item;
+    }
+}
+
+
+std::vector<std::string> AIBase::split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    AIBase::split(s, delim, std::back_inserter(elems));
+    return elems;
+}
+	template<typename Out>
+	void split(const std::string &s, char delim, Out result) {
+	    std::stringstream ss;
+	    ss.str(s);
+	    std::string item;
+	    while (std::getline(ss, item, delim)) {
+	        *(result++) = item;
+	    }
+	}
+
+
+	std::vector<std::string> split(const std::string &s, char delim) {
+	    std::vector<std::string> elems;
+	    split(s, delim, std::back_inserter(elems));
+	    return elems;
+	}

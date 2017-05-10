@@ -91,6 +91,9 @@ void TeamBase::SetValue(const std::string& key, const std::string& value)
 		if (!value.empty())
 			startPos.z = atoi(value.c_str());
 	}
+	else if (key == "assumptions") {
+		assumptions = value;
+	}
 	else if (key == "unitplans") {
 		if (!value.empty()){
 			std::vector<std::string> paths(util::split(value,'+'));
@@ -114,6 +117,15 @@ void TeamBase::SetValue(const std::string& key, const std::string& value)
 std::vector<float3> const& TeamBase::GetUnitPlans(int unitId) const{
 		return unitplans[GetUnitIndex(unitId)];
 }
+
+std::string const& TeamBase::GetAssumptions() const{
+	return assumptions;
+}
+
+std::string const& TeamBase::GetUnitName(int unitId) const{
+  	return names[GetUnitIndex(unitId)];
+}
+
 void TeamBase::CreateUnits(){
 	for(int i(0); i<names.size(); ++i){
 		UnitLoadParams params;
@@ -123,8 +135,13 @@ void TeamBase::CreateUnits(){
 		params.unitID=-1;
 		params.beingBuilt=false;
 		params.teamID=teamNum;
+                params.flattenGround=false;
 		params.facing=unitplans[i].size()>1?unitplans[i].front().HeadingTo(unitplans[i][2]):0.0;
-		CUnit* unit(unitLoader->LoadUnit(names[i],params));
+		std::string fixed(names[i]);
+		std::size_t pos = fixed.find("-");
+		std::transform(fixed.begin(), fixed.end(), fixed.begin(), ::tolower); // Lowercase
+		if(pos!=std::string::npos) fixed=fixed.substr(0,pos);
+		CUnit* unit(unitLoader->LoadUnit(fixed,params));
 		//unit->Activate();
 	}
 }

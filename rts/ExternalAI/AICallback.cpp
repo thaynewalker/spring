@@ -691,12 +691,13 @@ bool CAICallback::IsUnitCloaked(int unitId) {
 bool CAICallback::IsUnitRadarOn(int unitId) {
 
 	bool isRadarOn = false;
-
 	verify();
-	const CUnit* unit = GetInLosUnit(unitId);
-	if (unit) {
+        const CUnit* unit = unitHandler->GetUnit(unitId);
+	if (unit){
 		isRadarOn = unit->radarOn;
-	}
+	}else{
+          unit = unitHandler->GetUnit(unitId);
+        }
 
 	return isRadarOn;
 }

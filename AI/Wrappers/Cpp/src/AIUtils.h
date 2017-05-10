@@ -6,6 +6,7 @@
 #include "Team.h"
 #include "UnitDef.h"
 #include <ostream>
+#include <sstream>
 
 namespace utils{
 enum {
@@ -31,6 +32,8 @@ static void GetUnitById(int id, std::vector<springai::Unit*> const& units, sprin
 		}
 	}
 }
+
+
 
 static std::ostream& operator <<(std::ostream& ss, springai::AIFloat3 const& vec){
 	ss<<vec.x<<","<<vec.y<<","<<vec.z;

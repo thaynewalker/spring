@@ -99,6 +99,7 @@ UnitDef::UnitDef()
 	, losRadius(0.0f)
 	, airLosRadius(0.0f)
 	, rcs(0.0)
+	, training(0.0)
 	, radarObservability(0.0f)
 	, infraredSensor(false)
 	, radarSensor(false)
@@ -395,6 +396,7 @@ UnitDef::UnitDef(const LuaTable& udTable, const std::string& unitName, int id)
 
 
 	rcs = udTable.GetFloat("rcs", 1.0);
+	training = udTable.GetFloat("training", 0.0);
 	radarObservability = udTable.GetFloat("radarObservability",1.0);
 	infraredSensor = udTable.GetBool("infraredSensor",false);
 	radarSensor = udTable.GetBool("radarSensor",false);

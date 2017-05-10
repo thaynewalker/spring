@@ -46,6 +46,16 @@ EXPORT(const char*      ) skirmishAiCallback_Engine_Version_getFull(int skirmish
 
 EXPORT(int              ) skirmishAiCallback_Teams_getSize(int skirmishAIId);
 
+EXPORT(int              ) skirmishAiCallback_SkirmishAIs_getScore(int skirmishAIId, int realId);
+
+EXPORT(void             ) skirmishAiCallback_SkirmishAIs_setTheScore(int skirmishAIId, int score);
+
+EXPORT(const char*      ) skirmishAiCallback_SkirmishAIs_getObservationAsString(int skirmishAIId, int index);
+
+EXPORT(void             ) skirmishAiCallback_SkirmishAIs_setObservation(int skirmishAIId, int index, float mnx, float mxx, float mnz, float mxz, const char* const exp, const char* const name);
+
+EXPORT(void             ) skirmishAiCallback_SkirmishAIs_addObservation(int skirmishAIId, int index, float x, float z, int angle, const char* const name);
+
 EXPORT(int              ) skirmishAiCallback_SkirmishAIs_getSize(int skirmishAIId);
 
 EXPORT(int              ) skirmishAiCallback_SkirmishAIs_getMax(int skirmishAIId);
@@ -804,6 +814,8 @@ EXPORT(int              ) skirmishAiCallback_getEnemyTeams(int skirmishAIId, int
 
 EXPORT(int              ) skirmishAiCallback_getAllyTeams(int skirmishAIId, int* teamIds, int teamIds_sizeMax);
 
+EXPORT(const char*      ) skirmishAiCallback_getAssumptions(int skirmishAIId, int teamId);
+EXPORT(const char*      ) skirmishAiCallback_getUnitName(int skirmishAIId, int teamId, int unitId, const char* defaultName);
 EXPORT(int              ) skirmishAiCallback_getUnitPaths(int skirmishAIId, int teamId, int unitId, float* points, int points_sizeMax);
 
 EXPORT(float            ) skirmishAiCallback_Team_getRulesParamFloat(int skirmishAIId, int teamId, const char* rulesParamName, float defaultValue);

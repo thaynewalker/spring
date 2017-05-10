@@ -14,68 +14,260 @@
 #include "AIUtils.h"
 #include "Game.h"
 #include "Resource.h"
+#include "SkirmishAIs.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #include <string>
 #include <iostream>
+#include <chrono>
+#include <ctime>
 
-recon::Recon::Recon(springai::OOAICallback* callback):AIBase(callback){}
+recon::Recon::Recon(springai::OOAICallback* callback):AIBase(callback){
+    aggressiveness=GetIntOption("aggressiveness");
+    risk=GetIntOption("risk");
+    port=GetIntOption("port");
+    server=GetStringOption("server");
 
-void
-recon::Recon::weaponFiredEvent(SWeaponFiredEvent* evt) {
-	springai::WeaponDef* wpn(callback->GetWeaponDefs()[evt->weaponDefId]);
-	float intensity(wpn->GetIntensity());
-	std::cout << "IR event intensity: " << intensity << "\n";
-	if(u2i.find(evt->unitId)!=u2i.end()){
-		// My unit fired a weapon, lose points
-		AIBase::rscore -= 10;
+	std::vector<std::string> assump(split(callback->GetAssumptions(callback->GetGame()->GetMyTeam()),','));
+	for(auto const& a:assump){
+		std::vector<std::string> rec(split(a,'_'));
+		assumptions[rec[0]]=std::vector<std::string>(6);
+		assumptions[rec[0]][0]=rec[1]; // minX
+		assumptions[rec[0]][1]=rec[2]; // maxX
+		assumptions[rec[0]][2]=rec[3]; // minZ
+		assumptions[rec[0]][3]=rec[4]; // maxZ
+		assumptions[rec[0]][4]=rec[5]; // dead or alive
+		assumptions[rec[0]][5]=rec[6]; // exposure
 	}
 }
 
 void
 recon::Recon::enemyEnterRadarEvent(SEnemyEnterRadarEvent* evt){
-	AIBase::rscore+=.001; // Some points for detecting an entity
-}
+	AIBase::enemyEnterRadarEvent(evt);
 
-void
-recon::Recon::enemyDamagedEvent(SEnemyDamagedEvent* evt){
+	bbox.resize(numEnemies);
+	bbox[numEnemies-1]=springai::AIFloat4(9999999.,9999999.,-9999999.,-9999999.);
+	pbbox.resize(numEnemies);
+	pbbox[numEnemies-1]=springai::AIFloat4(-9999999.,-9999999.,9999999.,9999999.);
+	exposure.resize(numEnemies);
+	exposure.back().resize(180);
+
+	std::string name(callback->GetUnitName(callback->GetGame()->GetMyTeam()==0?1:0,evt->enemy,""));
+	//id2name.insert(std::make_pair(evt->enemy,name));
+	names.push_back(name);
+	status.push_back(true);
 	springai::Unit* u(GetEnemyUnitById(evt->enemy));
-	springai::Resource* res;
-	u->GetDef()->GetCost(res);
-	AIBase::rscore+=res->GetOptimum()/2.0;
+	springai::AIFloat3 pos(u->GetPos());
+	auto assump(assumptions.find(name));
+	if(assump != assumptions.end()){
+		//callback->GetSkirmishAIs()->SetObservation(numEnemies-1,atof(assump->second[0].c_str()),atof(assump->second[1].c_str()),atof(assump->second[2].c_str()),atof(assump->second[3].c_str()),assump->second[4].c_str(),name.c_str());
+		pbbox[numEnemies-1].x1=atof(assump->second[0].c_str());
+		pbbox[numEnemies-1].x2=atof(assump->second[1].c_str());
+		pbbox[numEnemies-1].y1=atof(assump->second[2].c_str());
+		pbbox[numEnemies-1].y2=atof(assump->second[3].c_str());
+		if(pos.x<pbbox[numEnemies-1].x1 ||
+				pos.x>pbbox[numEnemies-1].x2 ||
+				pos.z<pbbox[numEnemies-1].y1 ||
+				pos.z>pbbox[numEnemies-1].y2){
+			// This is a new position for this entity
+		}else{
+			int i(0);
+			for(auto const& a:assump->second[5]){
+				exposure[numEnemies-1][i++]=a=='1';
+			}
+		}
+	}else{
+		//Unknown
+	}
+	update(u->GetUnitId(),pos);
 }
 
 void
-recon::Recon::enemyDestroyedEvent(SEnemyDestroyedEvent* evt){
-	springai::Unit* u(GetEnemyUnitById(evt->enemy));
-	springai::Resource* res;
-	u->GetDef()->GetCost(res);
-	AIBase::rscore+=res->GetOptimum()*10.0;
-}
-
-
-void
-recon::Recon::unitDamagedEvent(SUnitDamagedEvent* evt){
-	springai::Unit* u(GetFriendlyUnitById(evt->unit));
-	springai::Resource* res;
-	u->GetDef()->GetCost(res);
-	AIBase::rscore-=res->GetOptimum()/2.0;
+recon::Recon::unitCreatedEvent(SUnitCreatedEvent* evt){
+	AIBase::AddUnit(evt->unit);
+	std::string name(callback->GetUnitName(callback->GetGame()->GetMyTeam(),evt->unit,""));
+	//id2name.insert(std::make_pair(evt->enemy,name));
+	fnames.push_back(name);
+	fstatus.push_back(true);
+	if(aggressiveness>0){
+		GetFriendlyUnitById(evt->unit)->SetFireState(utils::FIRESTATE_FIREATWILL);
+	}
+	if(risk==0){
+		// Tell unit to go back home if fired at (TODO: make an accessor for incoming missile count.)
+	}
 }
 
 void
 recon::Recon::unitDestroyedEvent(SUnitDestroyedEvent* evt){
-	springai::Unit* u(GetFriendlyUnitById(evt->unit));
-	springai::Resource* res;
-	u->GetDef()->GetCost(res);
-	AIBase::rscore-=res->GetOptimum()*10.0;
+	AIBase::unitDestroyedEvent(evt);
+	fstatus[u2i[evt->unit]]=false;
 }
 
 void
+recon::Recon::enemyDestroyedEvent(SEnemyDestroyedEvent* evt){
+	AIBase::enemyDestroyedEvent(evt);
+	status[eu2i[evt->enemy]]=false;
+}
+
+int
 recon::Recon::defaultEvent(){
-	if(frame%100==0 && !AIBase::rdone && done.size() && allDone()){
-		AIBase::rdone=true;
-		std::cout << "Recon score: " << AIBase::rscore << "\n";
-		std::cout << "Incumbent score: " << AIBase::iscore << "\n";
-		callback->GetGame()->SendTextMessage("/AIKill 0",0);
-		callback->GetGame()->SendTextMessage("/AIKill 1",0);
+	AIBase::defaultEvent();
+	if(frame%500==0){
+		friends=callback->GetFriendlyUnits();
+		//std::cout << "Recon score: " << score << "\n";
+		std::vector<springai::Unit*> const& enemies(callback->GetEnemyUnits());
+		//friends=callback->GetFriendlyUnits();
+		//std::chrono::time_point<std::chrono::system_clock> start, end;
+		//start = std::chrono::system_clock::now();
+
+		std::vector<springai::AIFloat3> fpos(friends.size());
+		std::vector<double> fsens(friends.size());
+		int num(0);
+
+		for(auto f:friends){
+			++num;
+			springai::UnitDef* fDef(f->GetDef());
+			if(!fDef){
+				f->GetDef();
+			}
+			springai::AIFloat3 fPos(f->GetPos());
+			if(fDef->HasRadarSensor()){
+				fpos.push_back(fPos);
+				fsens.push_back(fDef->GetRadarSensitivity());
+			}
+		}
+
+
+		for(auto e:enemies){
+			if(e->IsRadarOn()){ // We assume a radius of 2R when enemy radar is on
+				// Apparently these calls are expensive. Make them once here.
+				springai::UnitDef* eDef(e->GetDef());
+				springai::AIFloat3 ePos(e->GetPos());
+				update(e->GetUnitId(),ePos);
+				for(int i(0); i<num; ++i){
+					if(fpos[i].distance(ePos) < eDef->GetRadarRadius()*2*eDef->GetRadarObservability()*fsens[i]){
+						int hdg(ePos.HeadingTo(fpos[i]));
+						if(!getExposure(e->GetUnitId(),hdg)){ // Observed at a new angle
+							//std::cout << "Enemy " << *e << " seen at " << hdg << " by " << *f << "\n";
+							expose(e->GetUnitId(),hdg);
+							//callback->GetSkirmishAIs()->AddObservation(numEnemies-1,ePos.x,ePos.z,hdg,id2name[e->GetUnitId()].c_str());
+							score++;
+						}
+					}else{
+						//std::cout << "Enemy " << *e << " out of range ("<< (e->GetDef()->GetRadarRadius()*e->GetDef()->GetRadarRadius()) <<") of " << *f << "\n";
+					}
+				}
+			}else{
+				//std::cout << *e << " radar off \n";
+			}
+		}
+		/*for(auto e:enemies){
+			if(e->IsRadarOn()){ // We assume a radius of 2R when enemy radar is on
+				// Apparently these calls are expensive. Make them once here.
+				springai::UnitDef* eDef(e->GetDef());
+				springai::AIFloat3 ePos(e->GetPos());
+				update(e->GetUnitId(),ePos);
+				for(auto f:friends){
+					springai::UnitDef* fDef(f->GetDef());
+					springai::AIFloat3 fPos(f->GetPos());
+					if(fDef->HasRadarSensor() && fPos.distance(ePos) < eDef->GetRadarRadius()*2*eDef->GetRadarObservability()*fDef->GetRadarSensitivity()){
+						int hdg(ePos.HeadingTo(fPos));
+						if(!getExposure(e->GetUnitId(),hdg)){ // Observed at a new angle
+							//std::cout << "Enemy " << *e << " seen at " << hdg << " by " << *f << "\n";
+							expose(e->GetUnitId(),hdg);
+							//callback->GetSkirmishAIs()->AddObservation(numEnemies-1,ePos.x,ePos.z,hdg,id2name[e->GetUnitId()].c_str());
+							score++;
+						}
+					}else{
+						//std::cout << "Enemy " << *e << " out of range ("<< (e->GetDef()->GetRadarRadius()*e->GetDef()->GetRadarRadius()) <<") of " << *f << "\n";
+					}
+				}
+			}else{
+				//std::cout << *e << " radar off \n";
+			}
+		}*/
+
+		//end = std::chrono::system_clock::now();
+		//std::chrono::duration<double> elapsed_seconds = end-start;
+		//std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+		if(alldone){
+	        struct sockaddr_in myaddr;      /* our address */
+	        struct sockaddr_in remaddr;     /* remote address */
+	        socklen_t slen(sizeof(remaddr));            /* length of addresses */
+	        int recvlen;                    /* # bytes received */
+	        int fd;                         /* our socket */
+	        int msgcnt = 0;                 /* count # of messages we received */
+
+
+	        // Send final scores to the caller
+	        /* create a UDP socket */
+
+	        if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+	                perror("cannot create socket\n");
+	        }
+
+	        /* bind the socket to any valid IP address and a specific port */
+
+	        memset((char *)&myaddr, 0, sizeof(myaddr));
+	        myaddr.sin_family = AF_INET;
+	        myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	        myaddr.sin_port = htons(0);
+
+	        if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
+	                perror("bind failed");
+	                return 0;
+	        }
+
+	        memset((char *) &remaddr, 0, sizeof(remaddr));
+	        remaddr.sin_family = AF_INET;
+	        remaddr.sin_port = htons(port);
+	        if (inet_aton(server.c_str(), &remaddr.sin_addr)==0) {
+	        	fprintf(stderr, "inet_aton() failed\n");
+	        }
+
+	        /* now loop, receiving data and printing what we received */
+	        std::cout << "Sending scores\n";
+	        std::stringstream ss;
+	        ss<<"Incumbent:"<<callback->GetSkirmishAIs()->GetScore(callback->GetSkirmishAIId()==0?1:0)<<",Recon:"<<score;
+	        ss<<",Assumptions:";
+	        for(int i(0); i<exposure.size(); ++i){
+	        	//ss<<callback->GetSkirmishAIs()->GetObservationAsString(i)<<";";
+	        	ss<<names[i]<<"_";
+	        	ss<<bbox[i].x1<<"_"<<bbox[i].x2<<"_"<<bbox[i].y1<<"_"<<bbox[i].y2<<"_";
+	        	ss<<status[i]<<"_";
+	        	for(auto const& a: exposure[i]){
+	        		ss<<a?"1":"0";
+	        	}
+	            ss<<",";
+	        }
+	        for(int i(0); i<fnames.size(); ++i){
+	        	ss<<fnames[i]<<"_"<<fstatus[i]<<",";
+	        }
+	        if (sendto(fd, ss.str().c_str() , strlen(ss.str().c_str()), 0, (struct sockaddr *)&remaddr, slen)==-1) {
+	        	perror("sendto failed");
+	        }
+	        close(fd);
+
+			callback->GetGame()->SendTextMessage("/ReloadForce",0);
+		}
+		if(!alldone && done.size() && allDone()){
+			alldone=true;
+
+			//for(auto i:eu2i){
+				//std::cout << i.first << " exposure " << exposure[i.second].count() << "\n";
+			//}
+
+			//callback->GetGame()->SendTextMessage("/AIKill 0",0);
+			//callback->GetGame()->SendTextMessage("/AIKill 1",0);
+			return score;
+		}
 	}
+	return 0;
 }

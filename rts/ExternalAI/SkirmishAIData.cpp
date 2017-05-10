@@ -12,6 +12,17 @@ CR_REG_METADATA(SkirmishAIBase, (
 ))
 
 
+CR_BIND(locData, )
+CR_REG_METADATA(locData, (
+	CR_MEMBER(id),
+	CR_MEMBER(minX),
+	CR_MEMBER(maxX),
+	CR_MEMBER(minZ),
+	CR_MEMBER(maxZ),
+	CR_MEMBER(exposure),
+	CR_MEMBER(stringrep)
+))
+
 CR_BIND(SkirmishAIStatistics, )
 CR_REG_METADATA(SkirmishAIStatistics, (
 	CR_MEMBER(numCommands),
@@ -27,7 +38,9 @@ CR_REG_METADATA(SkirmishAIData, (
 	CR_MEMBER(optionKeys),
 	CR_MEMBER(options),
 	CR_MEMBER(isLuaAI),
-	CR_MEMBER(currentStats)
+	CR_MEMBER(currentStats),
+	CR_MEMBER(score),
+	CR_MEMBER(observations)
 ))
 
 

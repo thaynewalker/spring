@@ -98,10 +98,10 @@ int CSkirmishAILibrary::HandleEvent(int skirmishAIId, int topic, const void* dat
 		return ret;
 
 	// event handling failed!
-	const int teamId = skirmishAIHandler.GetSkirmishAI(skirmishAIId)->team;
-	const char* errorStr = "AI for team %d (ID: %d) failed handling event with topic %d, error: %d";
+	//const int teamId = skirmishAIHandler.GetSkirmishAI(skirmishAIId)->team;
+	//const char* errorStr = "AI for team %d (ID: %d) failed handling event with topic %d, error: %d";
 
-	LOG_L(L_WARNING, errorStr, teamId, skirmishAIId, topic, ret);
+	//LOG_L(L_WARNING, errorStr, teamId, skirmishAIId, topic, ret);
 
 	return ret;
 }

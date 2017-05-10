@@ -18,18 +18,11 @@ private:
 	std::map<springai::Unit*,std::vector<springai::Unit*> > inrangeTable;
 public:
 	Incumbent(springai::OOAICallback* callback);
+	int strategy;
+
 protected:
-	virtual void defaultEvent();
-	virtual void enemyLeaveRadarEvent(SEnemyLeaveRadarEvent* evt);
-	virtual void enemyEnterRadarEvent(SEnemyEnterRadarEvent* evt);
-	virtual void weaponFiredEvent(SWeaponFiredEvent* evt);
-	virtual void commandFinishedEvent(SCommandFinishedEvent* evt);
-	virtual void enemyLeaveLOSEvent(SEnemyLeaveLOSEvent* evt){}
-	virtual void enemyEnterLOSEvent(SEnemyEnterLOSEvent* evt){}
-	virtual void enemyDestroyedEvent(SEnemyDestroyedEvent* evt);
-	virtual void enemyDamagedEvent(SEnemyDamagedEvent* evt);
-	virtual void unitDamagedEvent(SUnitDamagedEvent* evt);
-	virtual void unitDestroyedEvent(SUnitDestroyedEvent* evt);
+	virtual void unitCreatedEvent(SUnitCreatedEvent* evt);
+	virtual int defaultEvent();
 }; // class Incumbent
 
 } // namespace incumbent

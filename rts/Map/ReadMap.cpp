@@ -415,8 +415,10 @@ void CReadMap::UpdateHeightMapSynced(SRectangle hmRect, bool initialize)
 
 	UpdateCenterHeightmap(hmRect, initialize);
 	UpdateMipHeightmaps(hmRect, initialize);
+#ifndef HEADLESS
 	UpdateFaceNormals(hmRect, initialize);
 	UpdateSlopemap(hmRect, initialize); // must happen after UpdateFaceNormals()!
+#endif
 
 	assert(initialize == (losHandler == nullptr));
 

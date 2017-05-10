@@ -31,6 +31,12 @@ EXPORT(const char*      ) aiInterfaceCallback_AIInterface_Info_getValueByKey(int
 
 EXPORT(int              ) aiInterfaceCallback_Teams_getSize(int UNUSED_interfaceId);
 
+EXPORT(int              ) aiInterfaceCallback_SkirmishAIs_getScore(int interfaceId);
+EXPORT(void             ) aiInterfaceCallback_SkirmishAIs_setTheScore(int interfaceId, int score);
+EXPORT(const char*      ) aiInterfaceCallback_SkirmishAIs_getObservationAsString(int id, int index);
+EXPORT(void             ) aiInterfaceCallback_SkirmishAIs_setObservation(int id, int index, float mnx, float mxx, float mnz, float mxz, const char* const exp, const char* const name);
+EXPORT(void             ) aiInterfaceCallback_SkirmishAIs_addObservation(int id, int index, float x, float z, int angle, const char* const name);
+
 EXPORT(int              ) aiInterfaceCallback_SkirmishAIs_getSize(int UNUSED_interfaceId);
 EXPORT(int              ) aiInterfaceCallback_SkirmishAIs_getMax(int UNUSED_interfaceId);
 EXPORT(const char*      ) aiInterfaceCallback_SkirmishAIs_Info_getValueByKey(int UNUSED_interfaceId, const char* const shortName, const char* const version, const char* const key);

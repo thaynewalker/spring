@@ -135,6 +135,7 @@ public:
 	float losRadius;
 	float airLosRadius;
 
+        float training; // Notion of initial experience (betewwn 0 and 1)
 	float rcs; // My radar cross section (my visibility to radars)
 	float radarObservability; // My radar's observability
 	bool infraredSensor; // Whether my unit is capable of sensing IR

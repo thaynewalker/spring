@@ -82,6 +82,12 @@
 #include "System/Sync/FPUCheck.h"
 #include "System/Threading/ThreadPool.h"
 
+#include <stdlib.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 #include "lib/luasocket/src/restrictions.h"
 
 #ifdef WIN32
@@ -248,7 +254,6 @@ bool SpringApp::Initialize()
 
 	// Install Watchdog (must happen after time epoch is set)
 	Watchdog::Install();
-	Watchdog::RegisterThread(WDT_MAIN, true);
 
 	// ArchiveScanner uses for_mt --> needs thread-count set
 	// (employ all available threads, then switch to default)
@@ -285,6 +290,8 @@ bool SpringApp::Initialize()
 
 	// Create CGameSetup and CPreGame objects
 	Startup();
+
+	Watchdog::RegisterThread(WDT_MAIN, true);
 
 	return true;
 }
@@ -654,17 +661,56 @@ CGameController* SpringApp::RunScript(const std::string& buf)
 
 void SpringApp::StartScript(const std::string& script)
 {
-	// startscript
-	LOG("[%s] Loading StartScript from: %s", __func__, script.c_str());
-	CFileHandler fh(script, SPRING_VFS_PWD_ALL);
-	if (!fh.FileExists())
-		throw content_error("Setup-script does not exist in given location: " + script);
+	std::string sbuf;
+	if(script.find_first_not_of("0123456789") == std::string::npos){
+		// This is a port number - listen and receive the start script contents
+		static const int BUFSIZE(20000);
+		const int SERVICE_PORT(atoi(script.c_str()));
+		struct sockaddr_in myaddr,remaddr;
+		socklen_t addrlen(sizeof(remaddr));
+		int recvlen, fd;
+		char buf[BUFSIZE];
+		/* create a UDP socket */
 
-	std::string buf;
-	if (!fh.LoadStringData(buf))
-		throw content_error("Setup-script cannot be read: " + script);
+		if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+			perror("cannot create socket\n");
+			return;
+		}
 
-	activeController = RunScript(buf);
+		memset((char *)&myaddr, 0, sizeof(myaddr));
+		myaddr.sin_family = AF_INET;
+		myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+		myaddr.sin_port = htons(SERVICE_PORT);
+
+		if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
+			perror("bind failed");
+			return;
+		}
+		//for (;;) {
+			std::cout << "waiting for script on port " << SERVICE_PORT << "\n";
+			recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
+			if (recvlen > 0) {
+				buf[recvlen] = 0;
+				std::cout << "received script :\n" << buf << "\n";
+				sbuf.append(buf);
+			}else{
+				std::cout << "ERROR: Something went wrong receiving script\n";
+			}
+		//}
+                close(fd);
+	}else{
+
+		// startscript
+		LOG("[%s] Loading StartScript from: %s", __func__, script.c_str());
+		CFileHandler fh(script, SPRING_VFS_PWD_ALL);
+		if (!fh.FileExists())
+			throw content_error("Setup-script does not exist in given location: " + script);
+
+		if (!fh.LoadStringData(sbuf))
+			throw content_error("Setup-script cannot be read: " + script);
+
+	}
+	activeController = RunScript(sbuf);
 }
 
 void SpringApp::LoadSpringMenu()
@@ -748,6 +794,7 @@ void SpringApp::Startup()
 
 void SpringApp::Reload(const std::string script)
 {
+	Watchdog::DeregisterThread(WDT_MAIN);
 	LOG("[SpringApp::%s][1]", __func__);
 
 	// get rid of any running worker threads
@@ -834,9 +881,11 @@ void SpringApp::Reload(const std::string script)
 
 	LOG("[SpringApp::%s][12]", __func__);
 
+	Watchdog::RegisterThread(WDT_MAIN, true);
 	if (script.empty()) {
 		// if no script, drop back to menu
-		LoadSpringMenu();
+		//LoadSpringMenu();
+                StartScript(inputFile); // From port number !!!
 	} else {
 		activeController = RunScript(script);
 	}
