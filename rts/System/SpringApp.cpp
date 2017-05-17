@@ -663,41 +663,63 @@ void SpringApp::StartScript(const std::string& script)
 {
 	std::string sbuf;
 	if(script.find_first_not_of("0123456789") == std::string::npos){
-		// This is a port number - listen and receive the start script contents
-		static const int BUFSIZE(20000);
-		const int SERVICE_PORT(atoi(script.c_str()));
-		struct sockaddr_in myaddr,remaddr;
-		socklen_t addrlen(sizeof(remaddr));
-		int recvlen, fd;
-		char buf[BUFSIZE];
-		/* create a UDP socket */
+	  // This is a port number - listen and receive the start script contents
+	  static const int BUFSIZE(2048);
+	  const int SERVICE_PORT(atoi(script.c_str()));
+	  struct sockaddr_in myaddr,remaddr;
+	  int recvlen(0);
+	  int fd;
+	  char buf[BUFSIZE];
+	  /* create a UDP socket */
 
-		if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-			perror("cannot create socket\n");
-			return;
-		}
+	  if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	    perror("cannot create socket\n");
+	    return;
+	  }
 
-		memset((char *)&myaddr, 0, sizeof(myaddr));
-		myaddr.sin_family = AF_INET;
-		myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-		myaddr.sin_port = htons(SERVICE_PORT);
+	  memset((char *)&myaddr, 0, sizeof(myaddr));
+	  myaddr.sin_family = AF_INET;
+	  myaddr.sin_addr.s_addr = INADDR_ANY;
+	  myaddr.sin_port = htons(SERVICE_PORT);
 
-		if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
-			perror("bind failed");
-			return;
-		}
-		//for (;;) {
-			std::cout << "waiting for script on port " << SERVICE_PORT << "\n";
-			recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
-			if (recvlen > 0) {
-				buf[recvlen] = 0;
-				std::cout << "received script :\n" << buf << "\n";
-				sbuf.append(buf);
-			}else{
-				std::cout << "ERROR: Something went wrong receiving script\n";
-			}
-		//}
-                close(fd);
+	  if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
+	    perror("bind failed");
+	    return;
+	  }
+
+	  listen(fd,5); // Backlog of 5 requests...
+	  std::cout << "waiting for script on port " << SERVICE_PORT << "\n";
+	  socklen_t addrlen(sizeof(remaddr));
+	  int newfd(-1);
+	  while((newfd=accept(fd, (struct sockaddr *) &remaddr, &addrlen)) < 0){
+	    std::cout << "ERROR: On socket accept, trying again...\n";
+	    sleep(1);
+	  }
+	  int sz(0);
+	  char b[6];
+	  while(!sz){
+	    // Read exactly 5 bytes  - the message length...
+	    if(read(newfd, b, 5)>0){
+	      b[5]=0;
+	    }
+	    sz=atoi(b);
+	  }
+	  std::cout << "Expecting data of length: ("<<b<<") " << sz << "\n";
+
+	  while(recvlen<sz){
+	    int tmp(-1);
+	    memset((char *)&buf, 0, BUFSIZE);
+	    if((tmp=read(newfd, buf, BUFSIZE-1))<0){
+	      std::cout << "ERROR: Something went wrong receiving script\n";
+	    }else{
+	      recvlen+=tmp;
+              std::cout << "received " << tmp << ": " << buf << "\n";
+	      sbuf.append(buf);
+	    }
+	  }
+	  std::cout << "received script :\n" << sbuf << "\n";
+	  close(fd);
+	  close(newfd);
 	}else{
 
 		// startscript

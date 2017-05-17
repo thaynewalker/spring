@@ -197,66 +197,64 @@ recon::Recon::defaultEvent(){
 		//std::chrono::duration<double> elapsed_seconds = end-start;
 		//std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
-		if(alldone){
-	        struct sockaddr_in myaddr;      /* our address */
-	        struct sockaddr_in remaddr;     /* remote address */
-	        socklen_t slen(sizeof(remaddr));            /* length of addresses */
-	        int recvlen;                    /* # bytes received */
-	        int fd;                         /* our socket */
-	        int msgcnt = 0;                 /* count # of messages we received */
+                if(alldone && !statusSent){
+
+                  struct sockaddr_in myaddr;      /* our address */
+                  struct sockaddr_in remaddr;     /* remote address */
+                  socklen_t slen(sizeof(myaddr));            /* length of addresses */
+                  int recvlen;                    /* # bytes received */
+                  int fd;                         /* our socket */
+                  int msgcnt = 0;                 /* count # of messages we received */
 
 
-	        // Send final scores to the caller
-	        /* create a UDP socket */
+                  // Send final scores to the caller
+                  /* create a TCP socket */
 
-	        if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-	                perror("cannot create socket\n");
-	        }
+                  if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+                    perror("cannot create socket\n");
+                  }
 
-	        /* bind the socket to any valid IP address and a specific port */
+                  hostent* svr;
+                  if(!(svr = gethostbyname(server.c_str()))){
+                    perror("no such host\n");
+                  }
 
-	        memset((char *)&myaddr, 0, sizeof(myaddr));
-	        myaddr.sin_family = AF_INET;
-	        myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	        myaddr.sin_port = htons(0);
+                  memset((char *)&remaddr, 0, sizeof(remaddr));
+                  remaddr.sin_family = AF_INET;
+                  bcopy((char *)svr->h_addr, (char *)&remaddr.sin_addr.s_addr, svr->h_length);
+                  remaddr.sin_port = htons(port);
 
-	        if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
-	                perror("bind failed");
-	                return 0;
-	        }
+                  if (connect(fd, (struct sockaddr *)&remaddr, sizeof(remaddr)) < 0) {
+                    perror("connect failed");
+                  }
 
-	        memset((char *) &remaddr, 0, sizeof(remaddr));
-	        remaddr.sin_family = AF_INET;
-	        remaddr.sin_port = htons(port);
-	        if (inet_aton(server.c_str(), &remaddr.sin_addr)==0) {
-	        	fprintf(stderr, "inet_aton() failed\n");
-	        }
+                  /* now loop, receiving data and printing what we received */
+                  std::cout << "Sending scores to " << server <<":"<<port<<"\n";
+                  std::stringstream ss;
+                  ss<<"Incumbent:"<<callback->GetSkirmishAIs()->GetScore(callback->GetSkirmishAIId()==0?1:0)<<",Recon:"<<score;
+                  ss<<",Assumptions:";
+                  for(int i(0); i<exposure.size(); ++i){
+                    //ss<<callback->GetSkirmishAIs()->GetObservationAsString(i)<<";";
+                    ss<<names[i]<<"_";
+                    ss<<bbox[i].x1<<"_"<<bbox[i].x2<<"_"<<bbox[i].y1<<"_"<<bbox[i].y2<<"_";
+                    ss<<status[i]<<"_";
+                    for(auto const& a: exposure[i]){
+                      ss<<a?"1":"0";
+                    }
+                    ss<<",";
+                  }
+                  for(int i(0); i<fnames.size(); ++i){
+                    ss<<fnames[i]<<"_"<<fstatus[i]<<",";
+                  }
+                  std::cout<<ss.str().c_str() << "\n";
+                  if(write(fd, ss.str().c_str() , strlen(ss.str().c_str()))<0) {
+                    perror("error sending results");
+                  }
+                  close(fd);
+                  statusSent=true;
 
-	        /* now loop, receiving data and printing what we received */
-	        std::cout << "Sending scores\n";
-	        std::stringstream ss;
-	        ss<<"Incumbent:"<<callback->GetSkirmishAIs()->GetScore(callback->GetSkirmishAIId()==0?1:0)<<",Recon:"<<score;
-	        ss<<",Assumptions:";
-	        for(int i(0); i<exposure.size(); ++i){
-	        	//ss<<callback->GetSkirmishAIs()->GetObservationAsString(i)<<";";
-	        	ss<<names[i]<<"_";
-	        	ss<<bbox[i].x1<<"_"<<bbox[i].x2<<"_"<<bbox[i].y1<<"_"<<bbox[i].y2<<"_";
-	        	ss<<status[i]<<"_";
-	        	for(auto const& a: exposure[i]){
-	        		ss<<a?"1":"0";
-	        	}
-	            ss<<",";
-	        }
-	        for(int i(0); i<fnames.size(); ++i){
-	        	ss<<fnames[i]<<"_"<<fstatus[i]<<",";
-	        }
-	        if (sendto(fd, ss.str().c_str() , strlen(ss.str().c_str()), 0, (struct sockaddr *)&remaddr, slen)==-1) {
-	        	perror("sendto failed");
-	        }
-	        close(fd);
-
-			callback->GetGame()->SendTextMessage("/ReloadForce",0);
-		}
+                  callback->GetGame()->SendTextMessage("/ReloadForce",0);
+                }
 		if(!alldone && done.size() && allDone()){
 			alldone=true;
 

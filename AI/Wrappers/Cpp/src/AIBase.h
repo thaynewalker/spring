@@ -44,6 +44,7 @@ protected:
 	int frame;
 	bool alldone;
 	int  score;
+	bool statusSent;
 	bool deathOccurred;
 
 	int GetIntOption(char const* const val, int dflt=0);

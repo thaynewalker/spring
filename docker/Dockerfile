@@ -1,12 +1,16 @@
 FROM ubuntu:16.04
 
-RUN apt-get -y update && apt-get -y install libdevil-dev libboost-regex-dev libunwind8-dev libcurl4-gnutls-dev
+ENV http_proxy http://204.68.140.236:80
+ENV https_proxy http://204.68.140.236:80
 
+RUN apt-get -y update
+RUN apt-get -y install libdevil-dev libboost-regex-dev libunwind8-dev libcurl4-gnutls-dev
+RUN apt-get -y install minizip libcurl3
+
+#COPY .config /root/.config
+COPY .spring /root/.spring
 COPY spring-headless /spring-headless
-
-EXPOSE 9000-9999/udp
-
-ENV PORT 9000
+COPY spring /usr/local/share/games/spring
 
 RUN apt-get clean
 

@@ -286,7 +286,7 @@ namespace springproc {
 
 	void CpuId::setDefault()
 	{
-		numProcessors = Threading::GetLogicalCpuCores();
+		numProcessors = std::min(4,Threading::GetLogicalCpuCores()); // Never use more than 4 processors
 		totalNumCores = numProcessors;
 		totalNumPackages = 1;
 
