@@ -71,8 +71,8 @@ public:
 	void UnitIdle(int unitId);
 	void UnitCreated(int unitId, int builderId);
 	void UnitFinished(int unitId);
-	void UnitDestroyed(int unitId, int attackerUnitId);
-	void UnitDamaged(int unitId, int attackerUnitId, float damage, const float3& dir, int weaponDefId, bool paralyzer);
+	void UnitDestroyed(int unitId, int attackerUnitId, float timeOffset);
+	void UnitDamaged(int unitId, int attackerUnitId, float damage, const float3& dir, int weaponDefId, bool paralyzer, float timeOffset);
 	void UnitMoveFailed(int unitId);
 	void UnitGiven(int unitId, int oldTeam, int newTeam);
 	void UnitCaptured(int unitId, int oldTeam, int newTeam);
@@ -82,15 +82,17 @@ public:
 	void EnemyLeaveLOS(int unitId);
 	void EnemyEnterRadar(int unitId);
 	void EnemyLeaveRadar(int unitId);
-	void EnemyDestroyed(int enemyUnitId, int attackerUnitId);
-	void EnemyDamaged(int enemyUnitId, int attackerUnitId, float damage, const float3& dir, int weaponDefId, bool paralyzer);
-	void Update(int frame);
+	void EnemyDestroyed(int enemyUnitId, int attackerUnitId, float timeOffset);
+	void EnemyDamaged(int enemyUnitId, int attackerUnitId, float damage, const float3& dir, int weaponDefId, bool paralyzer, float timeOffset);
+	void Update(int frame, float modGameTime);
 	void SendChatMessage(const char* msg, int fromPlayerId);
 	void SendLuaMessage(const char* inData, const char** outData);
 	void WeaponFired(int unitId, int weaponDefId);
 	void PlayerCommandGiven(const std::vector<int>& selectedUnits, const Command& c, int playerId);
 	void CommandFinished(int unitId, int commandId, int commandTopicId);
 	void SeismicPing(int allyTeam, int unitId, const float3& pos, float strength);
+	void ProjectileMoved(int id, const float3& pos, float timeOffset);
+	void RadarUpdate(int unitId, int state, float timeOfUpdate);
 
 	int GetSkirmishAIID() const { return skirmishAIId; }
 	int GetTeamId() const { return teamId; }

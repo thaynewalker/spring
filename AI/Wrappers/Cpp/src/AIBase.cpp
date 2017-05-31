@@ -14,8 +14,7 @@ hq(0),
 frame(0),
 alldone(false),
 score(0),
-deathOccurred(false)
-{
+deathOccurred(false){
 	callback->GetSkirmishAIs()->SetTheScore(score);
 }
 
@@ -198,12 +197,20 @@ int AIBase::HandleEvent(int topic, const void* data) {
 			unitDamagedEvent((SUnitDamagedEvent*) data);
 			break;
 		}
+		case EVENT_RADAR_CHANGED: {
+			radarChangedEvent((SRadarChangedEvent*) data);
+			break;
+		}
+		case EVENT_PROJECTILE_MOVED: {
+			projectileMovedEvent((SProjectileMovedEvent*) data);
+			break;
+		}
 		case EVENT_UNIT_DESTROYED: {
 			unitDestroyedEvent((SUnitDestroyedEvent*) data);
 			break;
 		}
 		default: {
-			retval = defaultEvent();
+			retval = defaultEvent(topic, data);
 			break;
 		}
 	}

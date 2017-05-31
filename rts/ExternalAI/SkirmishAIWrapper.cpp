@@ -321,8 +321,8 @@ void CSkirmishAIWrapper::UnitFinished(int unitId) {
 	HandleEvent(EVENT_UNIT_FINISHED, &evtData);
 }
 
-void CSkirmishAIWrapper::UnitDestroyed(int unitId, int attackerUnitId) {
-	const SUnitDestroyedEvent evtData = {unitId, attackerUnitId};
+void CSkirmishAIWrapper::UnitDestroyed(int unitId, int attackerUnitId, float timeOffset) {
+	const SUnitDestroyedEvent evtData = {unitId, attackerUnitId, timeOffset};
 	HandleEvent(EVENT_UNIT_DESTROYED, &evtData);
 }
 
@@ -332,10 +332,11 @@ void CSkirmishAIWrapper::UnitDamaged(
 	float damage,
 	const float3& dir,
 	int weaponDefId,
-	bool paralyzer
+	bool paralyzer,
+	float timeOffset
 ) {
 	float3 cpyDir = dir;
-	const SUnitDamagedEvent evtData = {unitId, attackerUnitId, damage, &cpyDir[0], weaponDefId, paralyzer};
+	const SUnitDamagedEvent evtData = {unitId, attackerUnitId, damage, &cpyDir[0], weaponDefId, paralyzer, timeOffset};
 
 	HandleEvent(EVENT_UNIT_DAMAGED, &evtData);
 }
@@ -386,8 +387,8 @@ void CSkirmishAIWrapper::EnemyLeaveRadar(int unitId) {
 	HandleEvent(EVENT_ENEMY_LEAVE_RADAR, &evtData);
 }
 
-void CSkirmishAIWrapper::EnemyDestroyed(int enemyUnitId, int attackerUnitId) {
-	const SEnemyDestroyedEvent evtData = {enemyUnitId, attackerUnitId};
+void CSkirmishAIWrapper::EnemyDestroyed(int enemyUnitId, int attackerUnitId, float timeOffset) {
+	const SEnemyDestroyedEvent evtData = {enemyUnitId, attackerUnitId, timeOffset};
 	HandleEvent(EVENT_ENEMY_DESTROYED, &evtData);
 }
 
@@ -397,16 +398,20 @@ void CSkirmishAIWrapper::EnemyDamaged(
 	float damage,
 	const float3& dir,
 	int weaponDefId,
-	bool paralyzer
+	bool paralyzer,
+	float timeOffset
 ) {
 	float3 cpyDir = dir;
-	const SEnemyDamagedEvent evtData = {enemyUnitId, attackerUnitId, damage, &cpyDir[0], weaponDefId, paralyzer};
+	const SEnemyDamagedEvent evtData = {enemyUnitId, attackerUnitId, damage, &cpyDir[0], weaponDefId, paralyzer, timeOffset};
 
 	HandleEvent(EVENT_ENEMY_DAMAGED, &evtData);
 }
 
-void CSkirmishAIWrapper::Update(int frame) {
-	const SUpdateEvent evtData = {frame};
+void CSkirmishAIWrapper::Update(int frame,float modGameTime) {
+  //static float gameTime(0.0);
+  //if(modGameTime-gameTime <1) return; // Throttle these update messages (don't need one every frame...)
+	  //gameTime=modGameTime;
+	const SUpdateEvent evtData = {frame,modGameTime};
 	HandleEvent(EVENT_UPDATE, &evtData);
 }
 
@@ -455,6 +460,15 @@ void CSkirmishAIWrapper::SeismicPing(
 	HandleEvent(EVENT_SEISMIC_PING, &evtData);
 }
 
+void CSkirmishAIWrapper::ProjectileMoved(int id, const float3& pos, float timeOffset) {
+  const SProjectileMovedEvent evtData = {id, pos.x, pos.y, pos.z, timeOffset};
+  HandleEvent(EVENT_PROJECTILE_MOVED, &evtData);
+}
+
+void CSkirmishAIWrapper::RadarUpdate(int unitId, int state, float timeOfUpdate){
+  const SRadarChangedEvent evtData = {unitId, state, timeOfUpdate};
+  HandleEvent(EVENT_RADAR_CHANGED, &evtData);
+}
 
 int CSkirmishAIWrapper::HandleEvent(int topic, const void* data) const {
 	SCOPED_TIMER(timerName.c_str());

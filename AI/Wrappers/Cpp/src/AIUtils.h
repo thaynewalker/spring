@@ -22,6 +22,16 @@ enum {
 	        FIRESTATE_FIREATWILL =  2,
 	        FIRESTATE_FIREATNEUTRAL =  3,
 	};
+	enum {
+	  MODE_OFF = 0,
+	  MODE_SEARCH = 1,
+	  MODE_ACQUIRE = 2,
+	  MODE_TRACK = 3,
+	  MODE_ILLUMINATE = 4,
+	  MODE_GUIDANCE = 5
+	};
+	static const int NUM_MODES(6);
+	static const std::string MODES[NUM_MODES]={"OFF","SEARCH","ACQUIRE","TRACK","ILLUMINATE","GUIDANCE"};
 };
 
 static void GetUnitById(int id, std::vector<springai::Unit*> const& units, springai::Unit** unit){

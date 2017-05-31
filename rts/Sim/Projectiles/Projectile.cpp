@@ -12,6 +12,7 @@
 #include "Sim/Units/UnitHandler.h"
 #include "System/Matrix44f.h"
 
+
 CR_BIND_DERIVED_INTERFACE(CProjectile, CExpGenSpawnable)
 
 CR_REG_METADATA(CProjectile,
@@ -61,7 +62,8 @@ CVertexArray* CProjectile::va = NULL;
 
 
 CProjectile::CProjectile()
-	: synced(false)
+  : pid(0)
+	, synced(false)
 	, weapon(false)
 	, piece(false)
 	, hitscan(false)
@@ -99,6 +101,7 @@ CProjectile::CProjectile(
 	bool isHitScan
 ): CExpGenSpawnable(pos, spd)
 
+  , pid(0)
 	, synced(isSynced)
 	, weapon(isWeapon)
 	, piece(isPiece)
@@ -141,6 +144,9 @@ CProjectile::~CProjectile()
 
 void CProjectile::Init(const CUnit* owner, const float3& offset)
 {
+  static int gid(0);
+  if(weapon)
+	  pid=++gid;
 	if (owner != NULL) {
 		// must be set before the AddProjectile call
 		ownerID = owner->id;

@@ -63,6 +63,15 @@ enum ScriptCloakBits { // FIXME -- not implemented
 	SCRIPT_CLOAK_IGNORE_TERRAFORM = (1 << 7)
 };
 
+// Generic radar modes
+enum RadarModes {
+  MODE_OFF = 0,
+  MODE_SEARCH = 1,
+  MODE_ACQUIRE = 2,
+  MODE_TRACK = 3,
+  MODE_ILLUMINATE = 4,
+  MODE_GUIDANCE = 5
+};
 
 class CUnit : public CSolidObject
 {
@@ -391,7 +400,7 @@ public:
 	int losRadius;
 	int airLosRadius;
 
-	bool radarOn;
+	int radarState;
 
 	int radarRadius;
 	int sonarRadius;

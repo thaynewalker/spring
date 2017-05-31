@@ -688,7 +688,7 @@ void SpringApp::StartScript(const std::string& script)
 	  }
 
 	  listen(fd,5); // Backlog of 5 requests...
-	  std::cout << "waiting for script on port " << SERVICE_PORT << "\n";
+	  std::cout << "waiting for script on port " << SERVICE_PORT << " @ " << std::time(0) << "\n";
 	  socklen_t addrlen(sizeof(remaddr));
 	  int newfd(-1);
 	  while((newfd=accept(fd, (struct sockaddr *) &remaddr, &addrlen)) < 0){
@@ -717,7 +717,7 @@ void SpringApp::StartScript(const std::string& script)
 	      sbuf.append(buf);
 	    }
 	  }
-	  std::cout << "received script :\n" << sbuf << "\n";
+	  std::cout << "received script on port " << SERVICE_PORT << " @ " << std::time(0) << "\n";
 	  close(fd);
 	  close(newfd);
 	}else{

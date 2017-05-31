@@ -25,14 +25,16 @@ incumbent::Incumbent::unitCreatedEvent(SUnitCreatedEvent* evt){
 	AIBase::unitCreatedEvent(evt);
 	springai::Unit* u(GetFriendlyUnitById(evt->unit));
 	if(u->GetDef()->GetTooltip()==SAM){
-		u->RadarOff(0,0);
+		u->RadarState(utils::MODE_OFF);
+	} else {
+	  u->RadarState(utils::MODE_SEARCH);
 	}
 }
 
 
 int
-incumbent::Incumbent::defaultEvent(){
-	AIBase::defaultEvent();
+incumbent::Incumbent::defaultEvent(int topic, const void* data){
+	AIBase::defaultEvent(topic,data);
 	if(frame++ % 100) return 0;
 	friends=callback->GetFriendlyUnits();
 	//if((frame % 10000)==0||deathOccurred) // This really only needs to be updated once in awhile
@@ -47,7 +49,7 @@ incumbent::Incumbent::defaultEvent(){
 
 
 	//std::cout << "=================================\n";
-		//std::cout << *f << ":" << f->IsRadarOn() << "\n";
+		//std::cout << *f << ":" << f->GetRadarState() << "\n";
 	springai::Unit* closest(0);
 	double dist(9999999999);
 	for(auto const e: enemies){
@@ -59,11 +61,11 @@ incumbent::Incumbent::defaultEvent(){
 			if(!f->GetDef()){
 				f->GetDef();
 			}
-			if(f->IsRadarOn()&&fless(d,dist)){
+			if(f->GetRadarState()&&fless(d,dist)){
 				dist = d;
 				closest=f;
 			// Waiting for aircraft to get closer gives SA systems better accuracy (strategy=0)
-			}else if(!f->IsRadarOn()&&f->GetDef()->GetTooltip()==SAM&&
+			}else if(!f->GetRadarState()&&f->GetDef()->GetTooltip()==SAM&&
 					fless(d,callback->GetWeaponDefByName("rocket")->GetRange()/**strategy==0?.67:1.0*/)){
 				inrangeTable[e].push_back(f);
 				//std::cout << " inrange ("<<inrangeTable[e].size()<<") " << d << "<" << callback->GetWeaponDefByName("rocket")->GetRange() << "\n";
@@ -75,13 +77,13 @@ incumbent::Incumbent::defaultEvent(){
 			// Notify all neighbors who are in range of the entity
 			// We assume these entities to be SA vehicles
 			for(auto const& neighbor: inrangeTable[e]){
-				neighbor->RadarOn(3,0);
+				neighbor->RadarState(utils::MODE_TRACK);
 				score-=1; // We lose points for turning on a radar
 				callback->GetSkirmishAIs()->SetTheScore(score);
 				neighbor->SetMoveState(utils::MOVESTATE_HOLDPOS,0);
 				neighbor->SetFireState(utils::FIRESTATE_FIREATWILL,0);
 				if(closest)
-					std::cout << "COMMS EVENT from " << *closest << " to " << *neighbor << " " << neighbor->IsRadarOn()<<"\n";
+					std::cout << "COMMS EVENT from " << *closest << " to " << *neighbor << " " << neighbor->GetRadarState()<<"\n";
 			}
 		}
 	}

@@ -141,7 +141,7 @@ CUnit::CUnit()
 , realAirLosRadius(0)
 , losRadius(0)
 , airLosRadius(0)
-, radarOn(false)
+, radarState(MODE_OFF)
 , radarRadius(0)
 , sonarRadius(0)
 , jammerRadius(0)
@@ -360,7 +360,7 @@ void CUnit::PreInit(const UnitLoadParams& params)
 
 	tooltip = unitDef->humanName + " - " + unitDef->tooltip;
 
-	radarOn = true;
+	radarState = MODE_SEARCH;
 
 	// sensor parameters
 	realLosRadius    = Clamp(int(unitDef->losRadius)    , 0, MAX_UNIT_SENSOR_RADIUS);
@@ -2841,7 +2841,7 @@ CR_REG_METADATA(CUnit, (
 	CR_MEMBER(losRadius),
 	CR_MEMBER(airLosRadius),
 
-	CR_MEMBER(radarOn),
+	CR_MEMBER(radarState),
 	CR_MEMBER(radarRadius),
 	CR_MEMBER(sonarRadius),
 	CR_MEMBER(jammerRadius),

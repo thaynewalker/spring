@@ -1331,7 +1331,7 @@ struct SSkirmishAICallback {
 
 	float             (CALLING_CONV *Unit_getSpeed)(int skirmishAIId, int unitId);
 
-	bool              (CALLING_CONV *Unit_isRadarOn)(int skirmishAIId, int unitId);
+	int              (CALLING_CONV *Unit_getRadarState)(int skirmishAIId, int unitId);
 
 	/**
 	 * Indicate the relative power of the unit,

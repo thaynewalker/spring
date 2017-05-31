@@ -64,7 +64,9 @@ protected:
 	virtual void enemyDamagedEvent(SEnemyDamagedEvent* evt);
 	virtual void unitDamagedEvent(SUnitDamagedEvent* evt);
 	virtual void unitDestroyedEvent(SUnitDestroyedEvent* evt);
-	virtual int defaultEvent(){
+	virtual void projectileMovedEvent(SProjectileMovedEvent* evt){}//std::cout << "Projectile "<<evt->id<<": "<<evt->x<<","<<evt->y<<","<<evt->z<<"@"<<evt->timeOffset<<"\n";}
+	virtual void radarChangedEvent(SRadarChangedEvent* evt){}//{std::cout << "Radar state for unit " << evt->unitId << " is " << evt->state << "\n";}
+	virtual int defaultEvent(int topic, const void* data){
 		if(deathOccurred){
 			friends=callback->GetFriendlyUnits();
 			deathOccurred=false;

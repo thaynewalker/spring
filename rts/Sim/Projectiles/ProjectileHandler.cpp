@@ -4,6 +4,7 @@
 
 #include "Projectile.h"
 #include "ProjectileHandler.h"
+#include "ExternalAI/EngineOutHandler.h"
 #include "Game/GlobalUnsynced.h"
 #include "Game/TraceRay.h"
 #include "Map/Ground.h"
@@ -228,6 +229,7 @@ void CProjectileHandler::UpdateProjectileContainer(ProjectileContainer& pc, bool
 		MAPPOS_SANITY_CHECK(p->pos);
 
 		p->Update();
+		eoh->ProjectileUpdate(p);
 		quadField->MovedProjectile(p);
 
 		MAPPOS_SANITY_CHECK(p->pos);

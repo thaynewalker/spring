@@ -15,6 +15,7 @@
 struct Command;
 class float3;
 class CUnit;
+class CProjectile;
 class CGroup;
 struct WeaponDef;
 class SkirmishAIKey;
@@ -53,6 +54,8 @@ public:
 	void UnitCreated(const CUnit& unit, const CUnit* builder);
 	void UnitFinished(const CUnit& unit);
 	void UnitDestroyed(const CUnit& destroyed, const CUnit* attacker);
+	void ProjectileUpdate(const CProjectile* projectile);
+	void RadarChanged(const CUnit&, int state);
 	void UnitDamaged(const CUnit& damaged, const CUnit* attacker, float damage, int weaponDefID, int projectileID, bool paralyzer);
 	void UnitMoveFailed(const CUnit& unit);
 	void UnitCaptured(const CUnit& unit, int oldTeam, int newTeam);

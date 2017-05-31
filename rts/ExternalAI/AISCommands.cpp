@@ -61,14 +61,9 @@ int toInternalUnitCommandTopic(int aiCmdTopic, const void* sUnitCommandData) {
 			internalUnitCommandTopic = CMD_FIGHT;
 			break;
 		}
-		case COMMAND_UNIT_RADAR_OFF:
+		case COMMAND_UNIT_RADAR_STATE:
 		{
-			internalUnitCommandTopic = CMD_RADAR_OFF;
-			break;
-		}
-		case COMMAND_UNIT_RADAR_ON:
-		{
-			internalUnitCommandTopic = CMD_RADAR_ON;
+			internalUnitCommandTopic = CMD_RADAR_STATE;
 			break;
 		}
 		case COMMAND_UNIT_ATTACK:
@@ -312,14 +307,9 @@ int extractAICommandTopic(const Command* engineCmd, int maxUnits) {
 			aiCommandTopic = COMMAND_UNIT_FIGHT;
 			break;
 		}
-		case CMD_RADAR_OFF:
+		case CMD_RADAR_STATE:
 		{
-			aiCommandTopic = COMMAND_UNIT_RADAR_OFF;
-			break;
-		}
-		case CMD_RADAR_ON:
-		{
-			aiCommandTopic = COMMAND_UNIT_RADAR_ON;
+			aiCommandTopic = COMMAND_UNIT_RADAR_STATE;
 			break;
 		}
 		case CMD_ATTACK:
@@ -575,15 +565,9 @@ bool newCommand(void* sUnitCommandData, int sCommandId, int maxUnits, Command* c
 			c->PushPos(cmd->toPos_posF3);
 		} break;
 
-		case COMMAND_UNIT_RADAR_OFF: {
-			SRadarOffCommand* cmd = static_cast<SRadarOffCommand*>(sUnitCommandData);
-			*c = Command(CMD_RADAR_OFF, cmd->options);
-			c->timeOut = cmd->timeOut;
-		} break;
-
-		case COMMAND_UNIT_RADAR_ON: {
-			SRadarOnCommand* cmd = static_cast<SRadarOnCommand*>(sUnitCommandData);
-			*c = Command(CMD_RADAR_ON, cmd->options);
+		case COMMAND_UNIT_RADAR_STATE: {
+			SRadarStateCommand* cmd = static_cast<SRadarStateCommand*>(sUnitCommandData);
+			*c = Command(CMD_RADAR_STATE, cmd->options, cmd->state);
 			c->timeOut = cmd->timeOut;
 		} break;
 

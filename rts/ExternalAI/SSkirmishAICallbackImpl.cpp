@@ -3930,8 +3930,8 @@ EXPORT(float) skirmishAiCallback_Unit_getHealth(int skirmishAIId, int unitId) {
 	return skirmishAIId_callback[skirmishAIId]->GetUnitHealth(unitId);
 }
 
-EXPORT(bool) skirmishAiCallback_Unit_isRadarOn(int skirmishAIId, int unitId){
-	return skirmishAIId_callback[skirmishAIId]->IsUnitRadarOn(unitId);
+EXPORT(int) skirmishAiCallback_Unit_getRadarState(int skirmishAIId, int unitId){
+	return skirmishAIId_callback[skirmishAIId]->GetUnitRadarState(unitId);
 }
 
 EXPORT(float) skirmishAiCallback_Unit_getSpeed(int skirmishAIId, int unitId) {
@@ -5675,7 +5675,7 @@ static void skirmishAiCallback_init(SSkirmishAICallback* callback) {
 	callback->Unit_SupportedCommand_isDisabled = &skirmishAiCallback_Unit_SupportedCommand_isDisabled;
 	callback->Unit_SupportedCommand_getParams = &skirmishAiCallback_Unit_SupportedCommand_getParams;
 	callback->Unit_getHealth = &skirmishAiCallback_Unit_getHealth;
-	callback->Unit_isRadarOn = &skirmishAiCallback_Unit_isRadarOn;
+	callback->Unit_getRadarState = &skirmishAiCallback_Unit_getRadarState;
 	callback->Unit_getSpeed = &skirmishAiCallback_Unit_getSpeed;
 	callback->Unit_getPower = &skirmishAiCallback_Unit_getPower;
 	callback->Unit_getResourceUse = &skirmishAiCallback_Unit_getResourceUse;

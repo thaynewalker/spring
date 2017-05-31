@@ -770,7 +770,7 @@ EXPORT(int              ) skirmishAiCallback_Unit_SupportedCommand_getParams(int
 
 EXPORT(float            ) skirmishAiCallback_Unit_getHealth(int skirmishAIId, int unitId);
 
-EXPORT(bool            ) skirmishAiCallback_Unit_isRadarOn(int skirmishAIId, int unitId);
+EXPORT(int             ) skirmishAiCallback_Unit_getRadarState(int skirmishAIId, int unitId);
 
 EXPORT(float            ) skirmishAiCallback_Unit_getSpeed(int skirmishAIId, int unitId);
 

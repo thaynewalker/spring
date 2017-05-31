@@ -14,6 +14,7 @@
 #include "Sim/Misc/LosHandler.h"
 #include "Sim/Misc/Team.h"
 #include "Sim/Misc/TeamHandler.h"
+#include "Sim/Projectiles/Projectile.h"
 #include "Sim/Units/Unit.h"
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Units/CommandAI/Command.h"
@@ -124,7 +125,7 @@ void CEngineOutHandler::Update() {
 
 	const int frame = gs->frameNum;
 
-	DO_FOR_SKIRMISH_AIS(Update(frame))
+	DO_FOR_SKIRMISH_AIS(Update(gs->frameNum,gu->modGameTime))
 }
 
 
@@ -211,6 +212,7 @@ void CEngineOutHandler::UnitLeftRadar(const CUnit& unit, int allyTeamId) {
 
 
 void CEngineOutHandler::UnitIdle(const CUnit& unit) {
+  return; // Note: My AIs don't care about this message... and it is fairly ubiquitous
 	AI_EVT_MTH();
 
 	const int teamId = unit.team;
@@ -342,7 +344,7 @@ void CEngineOutHandler::UnitDestroyed(const CUnit& destroyed, const CUnit* attac
 			if (attackerInLosOrRadar || saw->IsCheatEventsEnabled()) {
 				visibleAttackerId = attackerId;
 			}
-			saw->UnitDestroyed(destroyedId, visibleAttackerId);
+			saw->UnitDestroyed(destroyedId, visibleAttackerId, gu->modGameTime);
 		}
 	}
 
@@ -364,11 +366,31 @@ void CEngineOutHandler::UnitDestroyed(const CUnit& destroyed, const CUnit* attac
 		if ((attacker != NULL) && teamHandler->Ally(aiAllyTeam, attacker->allyteam)) {
 			myAttackerId = attackerId;
 		}
-		saw->EnemyDestroyed(destroyedId, myAttackerId);
+		saw->EnemyDestroyed(destroyedId, myAttackerId, gu->modGameTime);
 	}
 }
 
 
+void CEngineOutHandler::ProjectileUpdate(
+	const CProjectile* projectile
+) {
+  if(!projectile->pid)return; // This is a fragment or non-weapon projectile
+  AI_EVT_MTH();
+	for (auto& ai: id_skirmishAI) {
+    CSkirmishAIWrapper* saw(ai.second.get());
+    saw->ProjectileMoved(projectile->pid, projectile->pos,gu->modGameTime);
+  }
+}
+
+void CEngineOutHandler::RadarChanged(
+	const CUnit& owner,
+	const int state){
+  AI_EVT_MTH();
+	for (auto& ai: id_skirmishAI) {
+    CSkirmishAIWrapper* saw(ai.second.get());
+    saw->RadarUpdate(owner.id,state,gu->modGameTime);
+  }
+}
 void CEngineOutHandler::UnitDamaged(
 	const CUnit& damaged,
 	const CUnit* attacker,
@@ -402,7 +424,7 @@ void CEngineOutHandler::UnitDamaged(
 			if (attackerInLosOrRadar || saw->IsCheatEventsEnabled())
 				visibleAttackerUnitId = attackerUnitId;
 
-			id_skirmishAI[ai]->UnitDamaged(damagedUnitId, visibleAttackerUnitId, damage, attackDir_damagedsView, weaponDefID, paralyzer);
+			id_skirmishAI[ai]->UnitDamaged(damagedUnitId, visibleAttackerUnitId, damage, attackDir_damagedsView, weaponDefID, paralyzer, gu->modGameTime);
 		}
 	}
 
@@ -424,7 +446,7 @@ void CEngineOutHandler::UnitDamaged(
 
 			if (damagedInLosOrRadar || saw->IsCheatEventsEnabled()) {
 				saw->EnemyDamaged(damagedUnitId, attackerUnitId, damage,
-						attackDir, weaponDefID, paralyzer);
+						attackDir, weaponDefID, paralyzer, gu->modGameTime);
 			}
 		}
 	}
@@ -574,7 +596,7 @@ void CEngineOutHandler::CreateSkirmishAI(const size_t skirmishAIId) {
 
 		if (!gs->PreSimFrame()) {
 			// We will only get here if the AI is created mid-game.
-			aiWrapper->Update(gs->frameNum);
+			aiWrapper->Update(gs->frameNum,gu->modGameTime);
 		}
 
 		// Send a UnitCreated event for each unit of the team.

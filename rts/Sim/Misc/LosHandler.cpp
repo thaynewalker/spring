@@ -137,7 +137,7 @@ inline void ILosType::UpdateUnit(CUnit* unit, bool ignore)
 	//   zone behind at its old position)
 
 	//   is radar turned off on purpose?
-	const bool sightOnly = (type == LOS_TYPE_LOS) || (type == LOS_TYPE_AIRLOS) || (!unit->radarOn);
+	const bool sightOnly = (type == LOS_TYPE_LOS) || (type == LOS_TYPE_AIRLOS) || (!unit->radarState);
 	const bool noSensors = (!unit->activated || unit->IsStunned());
 	if (!sightOnly && noSensors) {
 		// block any type of radar/jammer coverage when deactivated
@@ -880,7 +880,7 @@ bool CLosHandler::InSensor(const float3 pos, int allyTeam) const
 
 bool CLosHandler::InSensor(const CUnit* unit, int allyTeam) const
 {
-	if(!unit->radarOn){return false;}
+	if(!unit->radarState){return false;}
 	float radarProp(unit->radarRadius*unit->unitDef->radarObservability*2.0);
 	const CTeam * team(teamHandler->Team(allyTeam));
 	//CUnit const* closest;

@@ -104,7 +104,7 @@ public:
 	bool IsUnitCloaked(int unitId);
 	bool IsUnitParalyzed(int unitId);
 	bool IsUnitNeutral(int unitId);
-	bool IsUnitRadarOn(int unitId);
+	int GetUnitRadarState(int unitId);
 	bool GetUnitResourceInfo(int unitId, UnitResourceInfo* resourceInfo);
 
 	const UnitDef* GetUnitDef(const char* unitName);

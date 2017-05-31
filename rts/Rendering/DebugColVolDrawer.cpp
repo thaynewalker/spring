@@ -259,7 +259,7 @@ static inline void DrawUnitRadar(const CUnit* u)
 		return;
 	if (!camera->InView(u->drawMidPos, u->GetDrawRadius()))
 		return;
-	if (!u->radarOn || !u->radarRadius)
+	if (!u->radarState || !u->radarRadius)
 		return;
 
 	CollisionVolume cv(u->collisionVolume);

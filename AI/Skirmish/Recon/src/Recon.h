@@ -7,6 +7,9 @@
 #include "AIFloat4.h"
 
 #include <bitset>
+#include <chrono>
+#include <ctime>
+#include <unordered_map>
 
 namespace recon {
 
@@ -14,6 +17,10 @@ class Recon : public AIBase {
 private:
         int port;
         std::string server;
+        std::chrono::time_point<std::chrono::system_clock> start, end;
+        std::unordered_map<std::string,std::vector<std::string> > events;
+        std::unordered_map<int,float> ptimes;
+        std::unordered_map<int,float> times;
 public:
 	Recon(springai::OOAICallback* callback);
 
@@ -42,18 +49,18 @@ public:
 	std::unordered_map<std::string,std::vector<std::string>> assumptions;
 
 protected:
-	virtual int defaultEvent();
+	virtual int defaultEvent(int topic, const void* data);
 	virtual void unitCreatedEvent(SUnitCreatedEvent* evt);
 	virtual void enemyEnterRadarEvent(SEnemyEnterRadarEvent* evt);
 	virtual void unitDestroyedEvent(SUnitDestroyedEvent* evt);
 	virtual void enemyDestroyedEvent(SEnemyDestroyedEvent* evt);
+	virtual void projectileMovedEvent(SProjectileMovedEvent* evt);
+	virtual void radarChangedEvent(SRadarChangedEvent* evt);
 	std::vector<std::vector<bool>> exposure; // Each bit tells whether the entity has been observed at this angle or not
 	std::vector<springai::AIFloat4> bbox; // Bounding box of observations
 	std::vector<springai::AIFloat4> pbbox; // Initial bounding box of observations
 	std::vector<std::string> names;
 	std::vector<bool> status;
-	std::vector<std::string> fnames;
-	std::vector<bool> fstatus;
 
 
 }; // class Recon

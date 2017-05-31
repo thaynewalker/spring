@@ -56,8 +56,10 @@ enum EventTopic {
 	EVENT_ENEMY_CREATED                = 25,
 	EVENT_ENEMY_FINISHED               = 26,
 	EVENT_LUA_MESSAGE                  = 27,
+	EVENT_PROJECTILE_MOVED             = 28,
+	EVENT_RADAR_CHANGED                = 29,
 };
-const int NUM_EVENTS = 28;
+const int NUM_EVENTS = 30;
 
 
 
@@ -83,6 +85,8 @@ const int NUM_EVENTS = 28;
 		+ sizeof(struct SWeaponFiredEvent) \
 		+ sizeof(struct SPlayerCommandEvent) \
 		+ sizeof(struct SCommandFinishedEvent) \
+		+ sizeof(struct SProjectileMovedEvent) \
+		+ sizeof(struct SRadarChangedEvent) \
 		+ sizeof(struct SSeismicPingEvent) \
 		+ sizeof(struct SLoadEvent) \
 		+ sizeof(struct SSaveEvent) \
@@ -124,6 +128,7 @@ struct SReleaseEvent {
  */
 struct SUpdateEvent {
 	int frame;
+	float currModTime;
 }; //$ EVENT_UPDATE
 
 /**
@@ -204,6 +209,7 @@ struct SUnitDamagedEvent {
 	int weaponDefId;
 	/// if true, then damage is paralyzation damage, otherwise it is real damage
 	bool paralyzer;
+	float timeOffset;
 }; //$ EVENT_UNIT_DAMAGED INTERFACES:Unit(unit)
 
 /**
@@ -217,6 +223,7 @@ struct SUnitDestroyedEvent {
 	 * or the attacker is not visible and cheat events are off
 	 */
 	int attacker;
+	float timeOffset;
 }; //$ EVENT_UNIT_DESTROYED INTERFACES:Unit(unit),UnitLifeState()
 
 /**
@@ -293,6 +300,7 @@ struct SEnemyDamagedEvent {
 	int weaponDefId;
 	/// if true, then damage is paralyzation damage, otherwise it is real damage
 	bool paralyzer;
+	float timeOffset;
 }; //$ EVENT_ENEMY_DAMAGED INTERFACES:Unit(enemy),Enemy(enemy)
 
 /**
@@ -306,6 +314,7 @@ struct SEnemyDestroyedEvent {
 	 * or the attacker is not allied with the team receiving this event
 	 */
 	int attacker;
+	float timeOffset;
 }; //$ EVENT_ENEMY_DESTROYED INTERFACES:Unit(enemy),Enemy(enemy),UnitLifeState()
 
 /**
@@ -351,7 +360,7 @@ struct SCommandFinishedEvent {
 
 /**
  * This AI event is sent when a unit movement is detected by means of a seismic
- * event. A seismic event means erruption/movement/shakings of the ground. This
+ * event. A seismic event means eruption/movement/shaking of the ground. This
  * can be detected by only by special units usually, eg by the seismic detector
  * building in Balanced Annihilation.
  */
@@ -359,6 +368,27 @@ struct SSeismicPingEvent {
 	float* pos_posF3;
 	float strength;
 }; //$ EVENT_SEISMIC_PING
+
+
+/**
+ * This AI event is sent whenever a projectile track is updated
+ */
+struct SProjectileMovedEvent {
+  int id;
+	float x;
+	float y;
+	float z;
+	float timeOffset;
+}; //$ EVENT_PROJECTILE_MOVED
+
+/**
+ * This AI event is sent whenever a radar changes mode (including off)
+ */
+struct SRadarChangedEvent {
+  int unitId;
+  int state;
+  float timeOfChange;
+}; //$ EVENT_RADAR_CHANGED
 
 /**
  * This AI event is sent when the AI should be loading its full state from a

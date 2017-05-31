@@ -22,7 +22,7 @@ public:
 
 protected:
 	virtual void unitCreatedEvent(SUnitCreatedEvent* evt);
-	virtual int defaultEvent();
+	virtual int defaultEvent(int topic, const void* data);
 }; // class Incumbent
 
 } // namespace incumbent

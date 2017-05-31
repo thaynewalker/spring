@@ -124,26 +124,14 @@ CCommandAI::CCommandAI(CUnit* owner):
 
 	if (HasRadar()) {
 		SCommandDescription c;
-		//if(!owner->radarOn){
-
-			c.id   = CMD_RADAR_ON;
+			c.id   = CMD_RADAR_STATE;
 			c.type = CMDTYPE_ICON_UNIT_OR_MAP;
 
-			c.action    = "radarOn";
-			c.name      = "RadarOn";
-			c.tooltip   = c.name + ": Turns on radar";
+			c.action    = "radarState";
+			c.name      = "RadarState";
+			c.tooltip   = c.name + ": Changes Radar State";
 			c.mouseicon = c.name;
 			possibleCommands.push_back(commandDescriptionCache->GetPtr(c));
-		//}else{
-			c.id   = CMD_RADAR_OFF;
-			c.type = CMDTYPE_ICON_UNIT_OR_MAP;
-
-			c.action    = "radarOff";
-			c.name      = "RadarOff";
-			c.tooltip   = c.name + ": Turns off radar";
-			c.mouseicon = c.name;
-			possibleCommands.push_back(commandDescriptionCache->GetPtr(c));
-		//}
 	}
 
 	if (IsAttackCapable()) {
@@ -594,8 +582,7 @@ bool CCommandAI::AllowedCommand(const Command& c, bool fromSynced)
 	// TODO check if the command is in the map first, for more commands
 	switch (cmdID) {
 		case CMD_MOVE:
-		case CMD_RADAR_ON:
-		case CMD_RADAR_OFF:
+		case CMD_RADAR_STATE:
 		case CMD_ATTACK:
 		case CMD_AREA_ATTACK:
 		case CMD_RECLAIM:
@@ -646,15 +633,14 @@ bool CCommandAI::AllowedCommand(const Command& c, bool fromSynced)
 				return false;
 			// fall through
 
-                case CMD_RADAR_ON:
-		case CMD_RADAR_OFF:
-                        if(!HasRadar()){
-                                return false;
-                        }
-                        else{
-                         return true;
-                        }
-                        break;
+		case CMD_RADAR_STATE:
+		  if(!HasRadar()){
+		    return false;
+		  }
+		  else{
+		    return true;
+		  }
+		  break;
 		case CMD_ATTACK: {
 			if (!IsAttackCapable())
 				return false;
@@ -807,18 +793,11 @@ inline void CCommandAI::SetCommandDescParam0(const Command& c)
 bool CCommandAI::ExecuteStateCommand(const Command& c)
 {
 	switch (c.GetID()) {
-                case CMD_RADAR_ON:{
-                        owner->radarOn=true;
-			//SetCommandDescParam0(c);
-			//selectedUnitsHandler.PossibleCommandChange(owner);
-                        return true;
-                }
-		case CMD_RADAR_OFF: {
-			owner->radarOn=false;
-			//SetCommandDescParam0(c);
-			//selectedUnitsHandler.PossibleCommandChange(owner);
-                        return true;
-		}
+    case CMD_RADAR_STATE:{
+            owner->radarState=(int)c.params[0];
+            eoh->RadarChanged(*owner, owner->radarState);
+            return true;
+    }
 		case CMD_FIRE_STATE: {
 			owner->fireState = (int)c.params[0];
 			SetCommandDescParam0(c);

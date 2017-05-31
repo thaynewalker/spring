@@ -93,6 +93,7 @@ public:
 	static bool inArray;
 	static CVertexArray* va;
 	static void DrawArray();
+	int pid; // projectile id
 
 	bool synced;  ///< is this projectile part of the simulation?
 	bool weapon;  ///< is this a weapon projectile? (true implies synced true)
