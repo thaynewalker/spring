@@ -8,12 +8,13 @@
 AIBase::AIBase(springai::OOAICallback* callback):
 callback(callback),
 skirmishAIId(callback != 0 ? callback->GetSkirmishAIId() : -1),
-numUnits(0),
+//numUnits(0),
 numEnemies(0),
-hq(0),
+//hq(0),
 frame(0),
 alldone(false),
 score(0),
+statusSent(false),
 deathOccurred(false){
 	callback->GetSkirmishAIs()->SetTheScore(score);
 }
@@ -61,7 +62,7 @@ void
 AIBase::weaponFiredEvent(SWeaponFiredEvent* evt) {
 	springai::WeaponDef* wpn(callback->GetWeaponDefs()[evt->weaponDefId]);
 	float intensity(wpn->GetIntensity());
-	std::cout << "IR event intensity: " << intensity << "\n";
+	//std::cout << "IR event intensity: " << intensity << "\n";
 	if(u2i.find(evt->unitId)!=u2i.end()){
 		// My unit fired a weapon, lose points
 		score -= 10;
@@ -73,7 +74,7 @@ void
 AIBase::enemyEnterRadarEvent(SEnemyEnterRadarEvent* evt){
 	score+=1; // Some points for detecting an entity
 	callback->GetSkirmishAIs()->SetTheScore(score);
-	eu2i[evt->enemy]=numEnemies++;
+	//eu2i[evt->enemy]=numEnemies++;
 }
 
 void
@@ -88,6 +89,8 @@ AIBase::enemyDestroyedEvent(SEnemyDestroyedEvent* evt){
 	springai::Unit* u(GetEnemyUnitById(evt->enemy));
 	score += u->GetDef()->GetCost(callback->GetResourceByName("Metal"));
 	callback->GetSkirmishAIs()->SetTheScore(score);
+	units.erase(evt->enemy);
+	status[evt->enemy]=false;
 }
 
 
@@ -105,6 +108,8 @@ AIBase::unitDestroyedEvent(SUnitDestroyedEvent* evt){
 	callback->GetSkirmishAIs()->SetTheScore(score);
 	done[u2i[evt->unit]]=true;
 	deathOccurred=true;
+	units.erase(evt->unit);
+	status[evt->unit]=false;
 }
 
 void
@@ -112,46 +117,73 @@ AIBase::enemyLeaveRadarEvent(SEnemyLeaveRadarEvent* evt){
 	// Wait for a small amount of time, then turn off Radar
 }
 
+void
+AIBase::setUpStructures(){
+  int team(callback->GetGame()->GetMyTeam());
+  // Fill in links to these units
+  for(auto const u:callback->GetEnemyUnits()){
+    int id(u->GetUnitId());
+    std::string name(callback->GetUnitName(team==0?1:0,id,""));
+    names[id]=name;
+    eu2i[id]=units.size();
+    units[id]=u;
+    numEnemies++;
+    status[id]=true;
+  }
+  for(auto const u:callback->GetFriendlyUnits()){
+    int id(u->GetUnitId());
+    std::string name(callback->GetUnitName(team,id,""));
+    names[id]=name;
+    u2i[id]=(units.size()-numEnemies);
+    units[u->GetUnitId()]=u;
+    status[id]=true;
+  }
+  waypoints.resize(u2i.size());
+  ustat.resize(u2i.size());
+  done.resize(u2i.size());
+}
+
 
 void AIBase::AddUnit(int unitId){
-	friends=callback->GetFriendlyUnits();
 	springai::Unit* u(GetFriendlyUnitById(unitId));
 	if(u){
-		std::string name(u->GetDef()->GetName());
+		//std::string name(u->GetDef()->GetName());
 		u->SetFireState(utils::FIRESTATE_RETURNFIRE);
-		u2i[unitId]=numUnits++;
-		ustat.push_back(0);
+		//u2i[unitId]=numUnits++;
+		ustat[u2i[unitId]]=0;
 		std::vector<springai::AIFloat3> wpts;
 		std::vector<float> raw(callback->GetUnitPaths(callback->GetGame()->GetMyTeam(),unitId));
 		for(int i(0); i<raw.size(); i+=3){
 			wpts.push_back(springai::AIFloat3(raw[i],raw[i+1],raw[i+2]));
 		}
-		waypoints.push_back(wpts);
+		waypoints[u2i[unitId]]=wpts;
 
 		std::cout << u << "\n";
 		if(wpts.size()>1){
-			done.push_back(false);
-			std::cout << "now have " << this->numUnits << " mobile units\n";
+			done[u2i[unitId]]=false;
+			//std::cout << "now have " << this->numUnits << " mobile units\n";
 			u->MoveTo(waypoints[u2i[unitId]][++ustat[u2i[unitId]]],0);
 			//std::cout << "MOVE TO " << waypoints[u2i[unitId]][ustat[u2i[unitId]]] << "\n";
 
 		}else{
-			done.push_back(true);
+			done[u2i[unitId]]=true;
 			// Do we need to do anything for non-mobile units?
 		}
 	}
 }
 
 springai::Unit* AIBase::GetEnemyUnitById(int id) const{
-	springai::Unit* ut(0);
-	GetUnitById(id,callback->GetEnemyUnits(),&ut);
-	return ut;
+  return units.at(id);
+	//springai::Unit* ut(0);
+	//GetUnitById(id,callback->GetEnemyUnits(),&ut);
+	//return ut;
 }
 
 springai::Unit* AIBase::GetFriendlyUnitById(int id) const{
-	springai::Unit* ut(0);
-	GetUnitById(id,friends,&ut);
-	return ut;
+  return units.at(id);
+	//springai::Unit* ut(0);
+	//GetUnitById(id,friends,&ut);
+	//return ut;
 }
 
 int AIBase::HandleEvent(int topic, const void* data) {

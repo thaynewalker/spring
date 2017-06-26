@@ -634,6 +634,7 @@ CGameController* SpringApp::RunScript(const std::string& buf)
 	try {
 		clientSetup->LoadFromStartScript(buf);
 	} catch (const content_error& err) {
+	  std::cout << buf;
 		throw content_error(std::string("Invalid script file\n") + err.what());
 	}
 
@@ -713,7 +714,7 @@ void SpringApp::StartScript(const std::string& script)
 	      std::cout << "ERROR: Something went wrong receiving script\n";
 	    }else{
 	      recvlen+=tmp;
-              std::cout << "received " << tmp << ": " << buf << "\n";
+	      std::cout << "received " << tmp << "\n";
 	      sbuf.append(buf);
 	    }
 	  }

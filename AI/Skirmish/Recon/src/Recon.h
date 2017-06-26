@@ -5,6 +5,7 @@
 
 #include "AIBase.h"
 #include "AIFloat4.h"
+#include "Cheats.h"
 
 #include <bitset>
 #include <chrono>
@@ -16,11 +17,14 @@ namespace recon {
 class Recon : public AIBase {
 private:
         int port;
+        int pmodtime;
         std::string server;
         std::chrono::time_point<std::chrono::system_clock> start, end;
         std::unordered_map<std::string,std::vector<std::string> > events;
-        std::unordered_map<int,float> ptimes;
-        std::unordered_map<int,float> times;
+        std::unordered_map<int,springai::AIFloat3> ploc;
+        std::unordered_map<int,float> phead;
+        std::unordered_map<int,int> ptimes;
+        std::unordered_map<int,int> times;
 public:
 	Recon(springai::OOAICallback* callback);
 
@@ -43,12 +47,13 @@ public:
 	void expose(int unitId,int val){exposure[eu2i[unitId]][val/2]=true;}
 	bool getExposure(int unitId, int val){return exposure[eu2i[unitId]][val/2];}
 	int aggressiveness;
+	int recordEvents;
 	int risk;
-	springai::AIFloat4 m;
-	//std::unordered_map<int,std::string> id2name;
+	//springai::AIFloat4 m;
 	std::unordered_map<std::string,std::vector<std::string>> assumptions;
 
 protected:
+	virtual void setUpStructures();
 	virtual int defaultEvent(int topic, const void* data);
 	virtual void unitCreatedEvent(SUnitCreatedEvent* evt);
 	virtual void enemyEnterRadarEvent(SEnemyEnterRadarEvent* evt);
@@ -59,8 +64,7 @@ protected:
 	std::vector<std::vector<bool>> exposure; // Each bit tells whether the entity has been observed at this angle or not
 	std::vector<springai::AIFloat4> bbox; // Bounding box of observations
 	std::vector<springai::AIFloat4> pbbox; // Initial bounding box of observations
-	std::vector<std::string> names;
-	std::vector<bool> status;
+	//std::vector<std::string> names;
 
 
 }; // class Recon

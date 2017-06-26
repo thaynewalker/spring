@@ -26,21 +26,23 @@ public:
 protected:
 	springai::OOAICallback* callback;
 	int skirmishAIId;
-    int numUnits;
+    //int numUnits;
     int numEnemies;
-    std::string prefix;
-    springai::Unit* hq;
+    //std::string prefix;
+    //springai::Unit* hq;
     void AddUnit(int unitId);
     springai::Unit* GetFriendlyUnitById(int id) const;
     springai::Unit* GetEnemyUnitById(int id) const;
     std::vector<std::vector<springai::AIFloat3> > waypoints;
-    std::vector<std::string> status;
-    std::vector<std::string> name;
+    //std::vector<std::string> status;
+    std::unordered_map<int,std::string> names;
     std::unordered_map<int,int> u2i;
-	std::unordered_map<int,int> eu2i;
+    std::unordered_map<int,int> eu2i;
+    std::unordered_map<int,springai::Unit*> units;
     std::vector<int> ustat;
     std::vector<bool> done;
-	std::vector<springai::Unit*> friends;
+    std::unordered_map<int,bool> status; // Dead or alive
+	//std::vector<springai::Unit*> friends;
 	int frame;
 	bool alldone;
 	int  score;
@@ -53,6 +55,7 @@ protected:
 		for(auto const& ad: done){if(!ad)return false;}
 		return true;
 	}
+	virtual void setUpStructures();
 	virtual void unitCreatedEvent(SUnitCreatedEvent* evt);
 	virtual void commandFinishedEvent(SCommandFinishedEvent* evt);
 	virtual void weaponFiredEvent(SWeaponFiredEvent* evt);
@@ -68,7 +71,7 @@ protected:
 	virtual void radarChangedEvent(SRadarChangedEvent* evt){}//{std::cout << "Radar state for unit " << evt->unitId << " is " << evt->state << "\n";}
 	virtual int defaultEvent(int topic, const void* data){
 		if(deathOccurred){
-			friends=callback->GetFriendlyUnits();
+			//friends=callback->GetFriendlyUnits();
 			deathOccurred=false;
 		}
 	}

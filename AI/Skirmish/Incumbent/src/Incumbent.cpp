@@ -36,14 +36,14 @@ int
 incumbent::Incumbent::defaultEvent(int topic, const void* data){
 	AIBase::defaultEvent(topic,data);
 	if(frame++ % 100) return 0;
-	friends=callback->GetFriendlyUnits();
+	//friends=callback->GetFriendlyUnits();
 	//if((frame % 10000)==0||deathOccurred) // This really only needs to be updated once in awhile
 		//friends=callback->GetFriendlyUnits();
 
 	static const std::string SAM("SAM");
 	static const std::string EW("EW");
 
-	std::vector<springai::Unit*> const& enemies(callback->GetEnemyUnits());
+	//std::vector<springai::Unit*> const& enemies(callback->GetEnemyUnits());
 
 	inrangeTable.clear();
 
@@ -51,11 +51,15 @@ incumbent::Incumbent::defaultEvent(int topic, const void* data){
 	//std::cout << "=================================\n";
 		//std::cout << *f << ":" << f->GetRadarState() << "\n";
 	springai::Unit* closest(0);
-	double dist(9999999999);
-	for(auto const e: enemies){
+	float dist(9999999999);
+	for(auto const ee: eu2i){
+	  if(!status[ee.first]){continue;} // Dead unit
+	  springai::Unit* e(units[ee.first]);
 		if(e->GetDef()->GetTooltip()==SAM||e->GetDef()->GetTooltip()==EW)
 			continue;
-		for(auto const f: friends){
+		for(auto const ff: u2i){
+		  if(!status[ff.first]){continue;} // Dead unit
+		  springai::Unit* f(units[ff.first]);
 			float d(f->GetPos().distance(e->GetPos()));
 			//std::cout << "    Enemy " << *e << uint64_t(e) << " dist = " << d << " < "<< callback->GetWeaponDefByName("rocket")->GetRange() << "\n";
 			if(!f->GetDef()){
@@ -73,7 +77,9 @@ incumbent::Incumbent::defaultEvent(int topic, const void* data){
 		}
 	}
 	if(inrangeTable.size()){
-		for(auto const& e: enemies){ //Radar is currently on...
+	for(auto const ee: eu2i){
+	  if(!status[ee.first]){continue;} // Dead unit
+	  springai::Unit* e(units[ee.first]);
 			// Notify all neighbors who are in range of the entity
 			// We assume these entities to be SA vehicles
 			for(auto const& neighbor: inrangeTable[e]){
@@ -82,11 +88,11 @@ incumbent::Incumbent::defaultEvent(int topic, const void* data){
 				callback->GetSkirmishAIs()->SetTheScore(score);
 				neighbor->SetMoveState(utils::MOVESTATE_HOLDPOS,0);
 				neighbor->SetFireState(utils::FIRESTATE_FIREATWILL,0);
-				if(closest)
-					std::cout << "COMMS EVENT from " << *closest << " to " << *neighbor << " " << neighbor->GetRadarState()<<"\n";
+				//if(closest)
+					//std::cout << "COMMS EVENT from " << *closest << " to " << *neighbor << " " << neighbor->GetRadarState()<<"\n";
 			}
 		}
 	}
-	std::cout << "Incumbent score: " << score << std::endl;
+	//std::cout << "Incumbent score: " << score << std::endl;
 	return score;
 }
